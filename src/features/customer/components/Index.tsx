@@ -1,0 +1,162 @@
+import {
+  ShoppingCart,
+  Search,
+  Leaf,
+  User,
+  LogOut,
+  Bell,
+  Heart,
+  LogIn,
+} from "lucide-react";
+import { Input } from "../../../components/ui/input";
+import { NavigationButton } from "./Header/components/NavigationButton";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getCartItems } from "../CartPage/api";
+
+interface HeaderProps {
+  notificationCount: number;
+  cartItemsCount?: number;
+}
+
+export function Header({
+  notificationCount = 0,
+  cartItemsCount = 0,
+}: HeaderProps) {
+  const navigate = useNavigate();
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const [cartCount, setCartCount] = useState(cartItemsCount);
+
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      if (!isLoggedIn) {
+        setCartCount(0);
+        return;
+      }
+      try {
+        const response = await getCartItems();
+        if (response.success && response.data) {
+          const count = response.data.cartItems.reduce(
+            (sum, farm) => sum + farm.items.length,
+            0
+          );
+          setCartCount(count);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cart count:", error);
+      }
+    };
+    fetchCartCount();
+  }, [isLoggedIn]);
+  function onNavigateToAuth() {
+    navigate("/auth");
+  }
+  function onNavigateHome() {
+    navigate("/");
+  }
+  function onNavigateToProducts() {
+    navigate("/products");
+  }
+  function onNavigateToProfile() {
+    navigate("/profile");
+  }
+  function onNavigateToNotifications() {
+    navigate("/notifications");
+  }
+  function onNavigateToFavorites() {
+    navigate("/favorites");
+  }
+  function onNavigateToCart() {
+    navigate("/cart");
+  }
+  function onLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("role");
+    navigate("/");
+    window.location.reload();
+  }
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        {/* Logo */}
+        <button
+          onClick={onNavigateHome}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-600">
+            <Leaf className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-green-700">AgriConnect</span>
+        </button>
+
+        {/* Navigation */}
+        <nav className="hidden md:flex items-center gap-8">
+          <button
+            onClick={onNavigateHome}
+            className="text-foreground hover:text-green-600 transition-colors"
+          >
+            Home
+          </button>
+          <button
+            onClick={onNavigateToProducts}
+            className="text-foreground hover:text-green-600 transition-colors"
+          >
+            Shop All
+          </button>
+          <a
+            href="#fruits"
+            className="text-foreground hover:text-green-600 transition-colors"
+          >
+            Fruits
+          </a>
+          <a
+            href="#vegetables"
+            className="text-foreground hover:text-green-600 transition-colors"
+          >
+            Vegetables
+          </a>
+          <a
+            href="#leafy-greens"
+            className="text-foreground hover:text-green-600 transition-colors"
+          >
+            Leafy Greens
+          </a>
+        </nav>
+
+        {/* Functions */}
+        <div className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center relative">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              className="pl-9 w-64 bg-input-background border-border"
+            />
+          </div>
+          {isLoggedIn ? (
+            <>
+              <NavigationButton icon={User} onClick={onNavigateToProfile} />
+              <NavigationButton
+                icon={Bell}
+                onClick={onNavigateToNotifications}
+                count={notificationCount}
+                badgeColor="red"
+              />
+              <NavigationButton icon={Heart} onClick={onNavigateToFavorites} />
+              <NavigationButton
+                icon={ShoppingCart}
+                onClick={onNavigateToCart}
+                count={cartCount}
+                badgeColor="green"
+              />
+              <NavigationButton icon={LogOut} onClick={onLogout} />
+            </>
+          ) : (
+            <NavigationButton icon={LogIn} onClick={onNavigateToAuth} />
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
