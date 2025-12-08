@@ -1,10 +1,10 @@
-const BASE_URL = "http://192.168.1.231:5170/api";
+const BASE_URL = 'http://192.168.1.231:5170/api';
 
 export const API = {
   base: BASE_URL,
   address: {
     me: `${BASE_URL}/addresses/me`,
-    add: `${BASE_URL}/addresses/add`,
+    add: `${BASE_URL}/addresses`,
     update: (addressId: string) => `${BASE_URL}/addresses/${addressId}`,
     delete: (addressId: string) => `${BASE_URL}/addresses/${addressId}`,
   },
@@ -71,6 +71,7 @@ export const API = {
     updateItem: (cartId: string) => `${BASE_URL}/carts/${cartId}`,
     removeItem: (cartItemId: string) =>
       `${BASE_URL}/carts/cart-items/${cartItemId}`,
+    deleteAll: (cartId: string) => `${BASE_URL}/carts/${cartId}/delete-all`,
   },
   order: {
     base: `${BASE_URL}/orders`,
@@ -80,6 +81,12 @@ export const API = {
     getByCode: (orderCode: string) =>
       `${BASE_URL}/orders/order-code/${orderCode}`,
     getByFarm: (farmId: string) => `${BASE_URL}/orders/farm/${farmId}`,
+    updateStatus: (orderId: string) =>
+      `${BASE_URL}/orders/${orderId}/order-status`,
+  },
+  favoriteFarms: {
+    me: `${BASE_URL}/favorite-farms/me`,
+    add: `${BASE_URL}/favorite-farms`,
   },
   shipping: {
     calculateFee: `${BASE_URL}/ship/`,
