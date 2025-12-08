@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, Package } from "lucide-react";
+import { Search, Eye, Package, Plus, Leaf, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
@@ -23,6 +23,9 @@ import {
 import { toast } from "sonner";
 import type { ProductBatch } from "./types";
 import { getFarmerProductBatches } from "./api";
+import { AddProductBatchDialog } from "./components/AddProductBatchDialog";
+import { HarvestDialog } from "./components/HarvestDialog";
+import { SellDialog } from "./components/SellDialog";
 import axios from "axios";
 import { API } from "../../../api";
 
@@ -44,6 +47,10 @@ export function ProductBatchList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
+  const [sellDialogOpen, setSellDialogOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<ProductBatch | null>(null);
 
   // Get farmId by fetching farmer's current farm
   const fetchFarmId = async (): Promise<string | null> => {
@@ -78,34 +85,44 @@ export function ProductBatchList() {
     navigate(`/farmer/product-batches/${batchId}`);
   };
 
-  useEffect(() => {
-    const fetchBatches = async () => {
-      try {
-        setIsLoading(true);
-        const farmId = await fetchFarmId();
-        
-        if (!farmId) {
-          toast.error("No farm found. Please create a farm first.");
-          setIsLoading(false);
-          return;
-        }
+  const handleHarvestClick = (batch: ProductBatch) => {
+    setSelectedBatch(batch);
+    setHarvestDialogOpen(true);
+  };
 
-        const response = await getFarmerProductBatches(farmId);
-        if (response.success && response.data) {
-          setBatches(response.data);
-        } else {
-          toast.error(
-            `Failed to fetch batches: ${response.message || "Unknown error"}`
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching batches:", error);
-        toast.error("Error loading product batches");
-      } finally {
+  const handleSellClick = (batch: ProductBatch) => {
+    setSelectedBatch(batch);
+    setSellDialogOpen(true);
+  };
+
+  const fetchBatches = async () => {
+    try {
+      setIsLoading(true);
+      const farmId = await fetchFarmId();
+      
+      if (!farmId) {
+        toast.error("No farm found. Please create a farm first.");
         setIsLoading(false);
+        return;
       }
-    };
 
+      const response = await getFarmerProductBatches(farmId);
+      if (response.success && response.data) {
+        setBatches(response.data);
+      } else {
+        toast.error(
+          `Failed to fetch batches: ${response.message || "Unknown error"}`
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+      toast.error("Error loading product batches");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBatches();
   }, []);
 
@@ -124,6 +141,13 @@ export function ProductBatchList() {
           <h2 className="text-gray-900">Product Batch Management</h2>
           <p className="text-muted-foreground">Manage your product batches</p>
         </div>
+        <Button
+          className="bg-green-600 hover:bg-green-700"
+          onClick={() => setShowAddDialog(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Batch
+        </Button>
       </div>
 
       <Card className="p-6">
@@ -216,15 +240,35 @@ export function ProductBatchList() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewBatchDetail(batch.id)}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleHarvestClick(batch)}
+                            className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                            title="Update harvest yield"
+                          >
+                            <Leaf className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSellClick(batch)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            title="Sell product batch"
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewBatchDetail(batch.id)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -282,6 +326,38 @@ export function ProductBatchList() {
           </div>
         )}
       </Card>
+
+      {/* Add Product Batch Dialog */}
+      <AddProductBatchDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onBatchAdded={() => fetchBatches()}
+      />
+
+      {/* Harvest Dialog */}
+      {selectedBatch && (
+        <HarvestDialog
+          open={harvestDialogOpen}
+          onOpenChange={setHarvestDialogOpen}
+          batchId={selectedBatch.id}
+          batchCode={selectedBatch.batchCode.value}
+          currentYield={selectedBatch.totalYield}
+          onSuccess={() => fetchBatches()}
+        />
+      )}
+
+      {/* Sell Dialog */}
+      {selectedBatch && (
+        <SellDialog
+          open={sellDialogOpen}
+          onOpenChange={setSellDialogOpen}
+          batchId={selectedBatch.id}
+          batchCode={selectedBatch.batchCode.value}
+          availableQuantity={selectedBatch.availableQuantity}
+          currentPrice={selectedBatch.price}
+          onSuccess={() => fetchBatches()}
+        />
+      )}
     </div>
   );
 }

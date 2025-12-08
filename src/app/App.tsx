@@ -32,6 +32,7 @@ import { ErrorPage } from "../components/ErrorPage";
 import type { CartItem } from "../features/customer/CartPage/types";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { FarmerLayout } from "../features/farmer/components/FarmerLayout/Index";
+import { FarmerOverview } from "../features/farmer/FarmerOverview/FarmerOverview";
 import { OrderList } from "../features/farmer/OrderList/OrderList";
 import { ProductList } from "../features/farmer/ProductList/ProductList";
 import { SeasonList } from "../features/farmer/SeasonList/SeasonList";
@@ -80,7 +81,8 @@ export default function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartRefreshKey, setCartRefreshKey] = useState(0);
   const [careEvents, setCareEvents] = useState<any[]>([]);
-  const [traceabilityErrorMessage, setTraceabilityErrorMessage] = useState<string>("");
+  const [traceabilityErrorMessage, setTraceabilityErrorMessage] =
+    useState<string>("");
 
   const handleLogin = () => {
     if (userRole === ("Admin" as UserRole)) {
@@ -246,10 +248,7 @@ export default function App() {
               />
             }
           />
-          <Route
-            path="/farm/:farmId"
-            element={<FarmDetail />}
-          />
+          <Route path="/farm/:farmId" element={<FarmDetail />} />
           <Route
             path="/traceability"
             element={
@@ -261,15 +260,12 @@ export default function App() {
             }
           />
           <Route element={<CustomerRedirect />}>
-           <Route path="/profile" element={<UserProfile />} />
-           <Route
-             path="/orders"
-             element={<OrdersPage onNavigateToFeedback={() => {}} />}
-           />
-           <Route
-             path="/orders/:orderId"
-             element={<OrderDetailPage />}
-           />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route
+              path="/orders"
+              element={<OrdersPage onNavigateToFeedback={() => {}} />}
+            />
+            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
             <Route
               path="/cart"
               element={
@@ -288,10 +284,7 @@ export default function App() {
               path="/payments/vnpay-return"
               element={<VNPayReturnPage />}
             />
-            <Route
-              path="/payment-result"
-              element={<PaymentResultPage />}
-            />
+            <Route path="/payment-result" element={<PaymentResultPage />} />
             <Route
               path="/order-confirmation"
               element={
@@ -320,15 +313,20 @@ export default function App() {
         </Route>
         {/* Farmer Routes */}
         <Route element={<FarmerLayout />}>
-          <Route path="/farmer" element={<OrderList />} />
+          <Route path="/farmer" element={<FarmerOverview />} />
+          <Route path="/farmer/overview" element={<FarmerOverview />} />
+          <Route path="/farmer/profile" element={<FarmerProfile />} />
           <Route path="/farmer/orders" element={<OrderList />} />
-          <Route
-            path="/farmer/orders/:orderId"
-            element={<OrderDetail />}
-          />
+          <Route path="/farmer/orders/:orderId" element={<OrderDetail />} />
           <Route path="/farmer/products" element={<ProductList />} />
-          <Route path="/farmer/product-batches" element={<ProductBatchList />} />
-          <Route path="/farmer/product-batches/:batchId" element={<ProductBatchDetail />} />
+          <Route
+            path="/farmer/product-batches"
+            element={<ProductBatchList />}
+          />
+          <Route
+            path="/farmer/product-batches/:batchId"
+            element={<ProductBatchDetail />}
+          />
           <Route path="/farmer/seasons" element={<SeasonList />} />
           <Route path="/farmer/farms" element={<FarmManage />} />
           <Route path="/farmer/seasons/:seasonId" element={<SeasonDetail />} />

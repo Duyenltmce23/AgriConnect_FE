@@ -1,17 +1,37 @@
-import { use, useEffect, useState } from "react";
-import { ArrowLeft, MapPin, User, Phone, Mail, Package, DollarSign, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  MapPin,
+  User,
+  Phone,
+  Calendar,
+  Home,
+  Sprout,
+  Info,
+} from "lucide-react";
 import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
 import { Textarea } from "../../../components/ui/textarea";
 import { Label } from "../../../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import type { Farm, Farmer } from "./types";
-import { getFarmDetail, getFarmer } from "./api";
+import type { Farm } from "./types";
+import { getFarmDetail } from "./api";
 
 const defaultFarm: Farm = {
   id: "",
@@ -31,108 +51,82 @@ const defaultFarm: Farm = {
 };
 export function FarmDetail() {
   const [farm, setFarm] = useState<Farm>(defaultFarm);
-  const [farmer, setFarmer] = useState<Farmer>();
-  const [address, setAddress] = useState<string>("");
-  const [farmStatus, setFarmStatus] = useState<"active" | "banned">("active");
   const [showBanModal, setShowBanModal] = useState(false);
   const [showUnbanModal, setShowUnbanModal] = useState(false);
   const [banReason, setBanReason] = useState("");
-  const [showApproveModal, setShowApproveModal] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
   const { farmId } = useParams();
   const navigate = useNavigate();
-
-  // Pagination state for products
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const onBack = () => {
     navigate("/admin/farms");
   };
 
-  const [productStatuses, setProductStatuses] = useState<Record<string, "pending" | "approved">>({
-    "1": "approved",
-    "2": "approved",
-    "3": "pending",
-    "4": "approved",
-    "5": "pending",
-    "6": "approved",
-    "7": "approved",
-    "8": "pending",
-  });
+  const getStatusBadges = (farm: Farm) => {
+    const badges: {
+      label: string;
+      variant: "default" | "secondary" | "destructive" | "outline";
+    }[] = [];
+    if (farm.isBanned) badges.push({ label: "Banned", variant: "destructive" });
+    if (!farm.isValidForSelling)
+      badges.push({ label: "Not Verified", variant: "secondary" });
+    if (farm.isConfirmAsMall)
+      badges.push({ label: "Confirmed as Mall", variant: "default" });
+    if (farm.isDelete) badges.push({ label: "Deleted", variant: "outline" });
+    return badges;
+  };
 
-  const allProducts = [
-    { id: "1", name: "Organic Strawberries", price: "$4.99/lb", stock: 150 },
-    { id: "2", name: "Fresh Tomatoes", price: "$3.49/lb", stock: 200 },
-    { id: "3", name: "Mixed Greens", price: "$4.29/pack", stock: 85 },
-    { id: "4", name: "Bell Peppers", price: "$4.49/lb", stock: 120 },
-    { id: "5", name: "Organic Carrots", price: "$2.99/lb", stock: 180 },
-    { id: "6", name: "Cherry Tomatoes", price: "$5.49/pack", stock: 95 },
-    { id: "7", name: "Fresh Spinach", price: "$3.99/pack", stock: 110 },
-    { id: "8", name: "Red Onions", price: "$2.49/lb", stock: 160 },
-  ];
-
-  // Calculate pagination
-  const totalItems = allProducts.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentProducts = allProducts.slice(startIndex, endIndex);
+  const formatAddress = (address: Farm["address"]) => {
+    if (!address) return "No address provided";
+    return `${address.detail}, ${address.ward}, ${address.district}, ${address.province}`;
+  };
 
   const handleBan = () => {
     if (!banReason.trim()) {
       return;
     }
-    setFarmStatus("banned");
+    toast.success("Farm has been banned");
     setShowBanModal(false);
     setBanReason("");
-    toast.success("Farm has been banned");
   };
 
   const handleUnban = () => {
-    setFarmStatus("active");
-    setShowUnbanModal(false);
     toast.success("Farm has been unbanned");
-  };
-
-  const handleApproveProduct = () => {
-    if (selectedProductId) {
-      setProductStatuses(prev => ({
-        ...prev,
-        [selectedProductId]: "approved"
-      }));
-      setShowApproveModal(false);
-      setSelectedProductId("");
-      toast.success("Product has been approved");
-    }
-  };
-
-  const openApproveModal = (productId: string) => {
-    setSelectedProductId(productId);
-    setShowApproveModal(true);
+    setShowUnbanModal(false);
   };
 
   useEffect(() => {
     const fetchFarmDetail = async () => {
       try {
+        setIsLoading(true);
         const response = await getFarmDetail(farmId || "");
         if (response.success && response.data) {
           setFarm(response.data);
-          const farmerResponse = await getFarmer(response.data.farmerId);
-          if (farmerResponse.success && farmerResponse.data) {
-            const farmerList = farmerResponse.data;
-            const correctFarmer = farmerList?.find((farmer) => farmer.accountId === response.data?.farmerId);
-            setFarmer(correctFarmer);
-          }
         } else {
           toast.error(`Get Farm Detail failed: ${response.message}`);
         }
       } catch (error) {
         console.error("Error fetching farm details:", error);
+        toast.error("Error loading farm details");
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchFarmDetail();
-  }, []);
+  }, [farmId]);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading farm details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const statusBadges = getStatusBadges(farm);
+
   return (
     <>
       <div>
@@ -144,6 +138,18 @@ export function FarmDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Banner Image */}
+            {farm.bannerUrl && (
+              <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
+                <img
+                  src={farm.bannerUrl}
+                  alt={farm.farmName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Farm Basic Info */}
             <Card>
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -153,9 +159,17 @@ export function FarmDetail() {
                       Farm ID: {farm.id}
                     </p>
                   </div>
-                  <Badge className={farmStatus === "banned" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}>
-                    {farmStatus}
-                  </Badge>
+                  <div className="flex gap-2">
+                    {statusBadges.length === 0 ? (
+                      <Badge variant="outline">Active</Badge>
+                    ) : (
+                      statusBadges.map((badge, idx) => (
+                        <Badge key={idx} variant={badge.variant as any}>
+                          {badge.label}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -165,15 +179,13 @@ export function FarmDetail() {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <h4 className="mb-4">Contact Information</h4>
+                    <h4 className="font-semibold mb-4">Contact Information</h4>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
                         <User className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{farmer?.fullname}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{farmer?.email}</span>
+                        <span className="text-sm">
+                          {farm.farmer?.userName || "—"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Phone className="w-4 h-4 text-muted-foreground" />
@@ -181,27 +193,35 @@ export function FarmDetail() {
                       </div>
                       <div className="flex items-start gap-3">
                         <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                        <span className="text-sm">{address}</span>
+                        <span className="text-sm">
+                          {formatAddress(farm.address)}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="mb-4">Farm Details</h4>
+                    <h4 className="font-semibold mb-4">Farm Details</h4>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm text-muted-foreground">Farm Size</p>
-                        <p className="text-sm">{farm.area}</p>
+                        <p className="text-sm text-muted-foreground">Area</p>
+                        <p className="text-sm font-medium">
+                          {farm.area} hectares
+                        </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Certifications</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {/* {farm.certifications.map((cert) => (
-                            <Badge key={cert} variant="secondary" className="text-xs">
-                              {cert}
-                            </Badge>
-                          ))} */}
-                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Batch Code Prefix
+                        </p>
+                        <p className="text-sm font-medium">
+                          {farm.batchCodePrefix || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Created</p>
+                        <p className="text-sm font-medium">
+                          {new Date(farm.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -209,155 +229,152 @@ export function FarmDetail() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Products</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {currentProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="flex items-center justify-between p-3 rounded-lg border"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p>{product.name}</p>
+            {/* Seasons */}
+            {farm.seasons && farm.seasons.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Sprout className="w-5 h-5" />
+                    <CardTitle>Seasons ({farm.seasons.length})</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {farm.seasons.map((season) => (
+                      <div
+                        key={season.id}
+                        className="p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold">
+                              {season.seasonName}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {season.seasonDesc}
+                            </p>
+                          </div>
                           <Badge
-                            variant="secondary"
-                            className={productStatuses[product.id] === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}
+                            variant={
+                              season.status === "Pending"
+                                ? "secondary"
+                                : season.status === "Active"
+                                ? "default"
+                                : "outline"
+                            }
                           >
-                            {productStatuses[product.id]}
+                            {season.status}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{product.price}</p>
+                        <div className="flex gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(
+                              season.startDate
+                            ).toLocaleDateString()} to{" "}
+                            {new Date(season.endDate).toLocaleDateString()}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Badge variant="secondary">Stock: {product.stock}</Badge>
-                        {productStatuses[product.id] === "pending" && (
-                          <Button
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => openApproveModal(product.id)}
-                          >
-                            Approve
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 flex items-center justify-between border-t pt-4">
-                    <div className="flex items-center gap-4">
-                      <p className="text-sm text-muted-foreground">
-                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} products
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="items-per-page" className="text-sm">Items per page:</Label>
-                        <Select
-                          value={itemsPerPage.toString()}
-                          onValueChange={(value) => {
-                            setItemsPerPage(Number(value));
-                            setCurrentPage(1);
-                          }}
-                        >
-                          <SelectTrigger id="items-per-page" className="w-20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="5">5</SelectItem>
-                            <SelectItem value="10">10</SelectItem>
-                            <SelectItem value="20">20</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <span className="text-sm">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
-          {/* Stats Sidebar */}
+          {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance Stats</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-green-50">
-                    <DollarSign className="w-6 h-6 text-green-600" />
+            {/* Farmer Info */}
+            {farm.farmer && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    <CardTitle>Farmer Information</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Username</p>
+                    <p className="text-sm font-medium">
+                      {farm.farmer.userName}
+                    </p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Role</p>
+                    <p className="text-sm font-medium">{farm.farmer.role}</p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <Badge
+                      variant={farm.farmer.isActive ? "default" : "destructive"}
+                    >
+                      {farm.farmer.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Verified At</p>
+                    <p className="text-sm font-medium">
+                      {farm.farmer.verifiedAt
+                        ? new Date(farm.farmer.verifiedAt).toLocaleDateString()
+                        : "Not verified"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Address Info */}
+            {farm.address && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Home className="w-5 h-5" />
+                    <CardTitle>Location</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Province</p>
+                    <p className="text-sm font-medium">
+                      {farm.address.province}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Revenue</p>
-                    {/* <p className="text-xl">{farm.revenue}</p> */}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-blue-50">
-                    <Package className="w-6 h-6 text-blue-600" />
+                    <p className="text-sm text-muted-foreground">District</p>
+                    <p className="text-sm font-medium">
+                      {farm.address.district}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Products</p>
-                    {/* <p className="text-xl">{farm.products}</p> */}
+                    <p className="text-sm text-muted-foreground">Ward</p>
+                    <p className="text-sm font-medium">{farm.address.ward}</p>
                   </div>
-                </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Detail</p>
+                    <p className="text-sm font-medium">{farm.address.detail}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-                <Separator />
-
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Status</p>
-                  <Badge className={farmStatus === "banned" ? "bg-red-100 text-red-700 w-full justify-center py-2" : "bg-green-100 text-green-700 w-full justify-center py-2"}>
-                    {farmStatus === "banned" ? "Banned" : "Active & Verified"}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* Farm Status & Actions */}
             <Card>
               <CardHeader>
-                <CardTitle>Actions</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Info className="w-5 h-5" />
+                  <CardTitle>Actions</CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button className="w-full bg-green-600 hover:bg-green-700">
-                  Contact Farm
+                  Contact Farmer
                 </Button>
-                <Button variant="outline" className="w-full">
-                  View All Products
-                </Button>
-                <Button variant="outline" className="w-full">
-                  View Orders
-                </Button>
-                {farmStatus === "active" ? (
+                {!farm.isBanned ? (
                   <Button
                     variant="outline"
                     className="w-full text-red-600 hover:text-red-700"
@@ -386,7 +403,8 @@ export function FarmDetail() {
           <DialogHeader>
             <DialogTitle>Ban Farm</DialogTitle>
             <DialogDescription>
-              Are you sure you want to ban this farm? This action will prevent them from listing products and receiving orders.
+              Are you sure you want to ban this farm? This action will prevent
+              them from listing products and receiving orders.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -402,10 +420,13 @@ export function FarmDetail() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowBanModal(false);
-              setBanReason("");
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowBanModal(false);
+                setBanReason("");
+              }}
+            >
               Cancel
             </Button>
             <Button
@@ -425,7 +446,8 @@ export function FarmDetail() {
           <DialogHeader>
             <DialogTitle>Unban Farm</DialogTitle>
             <DialogDescription>
-              Are you sure you want to unban this farm? This will restore their ability to list products and receive orders.
+              Are you sure you want to unban this farm? This will restore their
+              ability to list products and receive orders.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -437,32 +459,6 @@ export function FarmDetail() {
               onClick={handleUnban}
             >
               Yes, Unban Farm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Approve Product Modal */}
-      <Dialog open={showApproveModal} onOpenChange={setShowApproveModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Approve Product</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to approve this product? It will become visible to customers.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowApproveModal(false);
-              setSelectedProductId("");
-            }}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-green-600 hover:bg-green-700"
-              onClick={handleApproveProduct}
-            >
-              Yes, Approve Product
             </Button>
           </DialogFooter>
         </DialogContent>
