@@ -24,7 +24,7 @@ class LocationApiService {
     }
   }
 
-  async getDistricts(provinceCode: number): Promise<District[]> {
+  async getDistricts(provinceCode: string): Promise<District[]> {
     try {
       const response = await openApiClient.get(`/p/${provinceCode}?depth=2`);
       return response.data.districts || [];
@@ -34,7 +34,7 @@ class LocationApiService {
     }
   }
 
-  async getWards(districtCode: number): Promise<Ward[]> {
+  async getWards(districtCode: string): Promise<Ward[]> {
     try {
       const response = await openApiClient.get(`/d/${districtCode}?depth=2`);
       return response.data.wards || [];
@@ -121,10 +121,10 @@ export const getProvinces = async (): Promise<Province[]> => {
   return locationService.getProvinces();
 };
 
-export const getDistricts = async (provinceCode: number): Promise<District[]> => {
+export const getDistricts = async (provinceCode: string): Promise<District[]> => {
   return locationService.getDistricts(provinceCode);
 };
 
-export const getWards = async (districtCode: number): Promise<Ward[]> => {
+export const getWards = async (districtCode: string): Promise<Ward[]> => {
   return locationService.getWards(districtCode);
 };

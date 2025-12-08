@@ -25,7 +25,8 @@ const defaultFarm: Farm = {
 export function FarmManage() {
   const [farm, setFarm] = useState<Farm>(defaultFarm);
   const [showAddFarmDialog, setShowAddFarmDialog] = useState(false);
-  const { hasFarmId, getFarmIdFromLocalStorage } = useFarmCheck();
+  const { hasFarmId, getFarmIdFromLocalStorage, saveFarmIdToLocalStorage } =
+    useFarmCheck();
 
   useEffect(() => {
     const fetchFarms = async () => {
@@ -33,6 +34,7 @@ export function FarmManage() {
         const farmsResponse = await getFarms();
         if (farmsResponse.success && farmsResponse.data) {
           setFarm(farmsResponse.data);
+          saveFarmIdToLocalStorage(farmsResponse.data.id);
         } else {
           toast.error(farmsResponse.message || "Failed to fetch farms");
         }
@@ -41,7 +43,7 @@ export function FarmManage() {
       }
     };
     fetchFarms();
-  }, []);
+  }, [saveFarmIdToLocalStorage]);
 
   // If no farm exists, show add farm dialog
   if (!hasFarmId() || !farm.id) {
@@ -84,6 +86,7 @@ export function FarmManage() {
                 const farmsResponse = await getFarms();
                 if (farmsResponse.success && farmsResponse.data) {
                   setFarm(farmsResponse.data);
+                  saveFarmIdToLocalStorage(farmsResponse.data.id);
                   setShowAddFarmDialog(false);
                   toast.success("Farm created successfully!");
                 }

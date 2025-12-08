@@ -11,10 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Pagination } from "../../../components/Pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
-import { Label } from "../../../components/ui/label";
 import type { Farm } from "./types/index.ts";
 import { getFarmList } from "./api/index.ts";
 import { toast } from "sonner";
@@ -25,7 +28,6 @@ export function FarmList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const navigate = useNavigate();
 
   const onViewDetails = (farmId: string) => {
@@ -50,14 +52,11 @@ export function FarmList() {
 
   const filteredFarms = farms.filter((farm) => {
     const matchesSearch =
-      farm.farmName.toLowerCase().includes(searchQuery.toLowerCase())
-    //  ||
-    // farm.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    // farm.owner.toLowerCase().includes(searchQuery.toLowerCase());
+      farm.farmName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      farm.farmDesc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      farm.phone.includes(searchQuery);
 
-    // const matchesStatus = statusFilter === "all" || farm.status === statusFilter;
-
-    return matchesSearch; //&& matchesStatus;
+    return matchesSearch;
   });
 
   // Pagination logic
@@ -75,18 +74,16 @@ export function FarmList() {
     setCurrentPage(1); // Reset to first page when changing items per page
   };
 
-  // const getStatusColor = (status: Farm["status"]) => {
-  //   switch (status) {
-  //     case "active":
-  //       return "bg-green-100 text-green-700";
-  //     case "inactive":
-  //       return "bg-gray-100 text-gray-700";
-  //     case "pending":
-  //       return "bg-yellow-100 text-yellow-700";
-  //     case "banned":
-  //       return "bg-red-100 text-red-700";
-  //   }
-  // };
+  const getStatusBadges = (farm: Farm) => {
+    const badges: { label: string; variant: "default" | "secondary" | "destructive" | "outline" }[] = [];
+    if (farm.isBanned) badges.push({ label: "Banned", variant: "destructive" });
+    if (!farm.isValidForSelling)
+      badges.push({ label: "Not Verified", variant: "secondary" });
+    if (farm.isConfirmAsMall)
+      badges.push({ label: "Mall", variant: "default" });
+    if (farm.isDelete) badges.push({ label: "Deleted", variant: "outline" });
+    return badges;
+  };
 
   return (
     <Card>
@@ -95,32 +92,14 @@ export function FarmList() {
           <div>
             <CardTitle>Farms Management</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Manage and monitor all registered farms
+              Manage and monitor all registered farms ({farms.length} total)
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="status-filter" className="text-sm whitespace-nowrap">Filter by:</Label>
-              <Select value={statusFilter} onValueChange={(value) => {
-                setStatusFilter(value);
-                setCurrentPage(1); // Reset to first page when filtering
-              }}>
-                <SelectTrigger id="status-filter" className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="banned">Banned</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search farms..."
+                placeholder="Search farms by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -134,43 +113,64 @@ export function FarmList() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Farm Name</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Area</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedFarms.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     No farms found
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedFarms.map((farm) => (
-                  <TableRow key={farm.id}>
-                    <TableCell>{farm.farmName}</TableCell>
-                    <TableCell>{farm.phone}</TableCell>
-                    <TableCell>{farm.area}</TableCell>
-                    <TableCell>
-                      {/* <Badge variant="secondary" className={getStatusColor(farm.status)}>
-                        farm.status
-                      </Badge> */}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewDetails(farm.id)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                paginatedFarms.map((farm) => {
+                  const statusBadges = getStatusBadges(farm);
+                  return (
+                    <TableRow key={farm.id}>
+                      <TableCell className="font-medium">
+                        {farm.farmName}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                        {farm.farmDesc || "—"}
+                      </TableCell>
+                      <TableCell>{farm.phone}</TableCell>
+                      <TableCell>{farm.area} ha</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {statusBadges.length === 0 ? (
+                            <Badge variant="outline">Active</Badge>
+                          ) : (
+                            statusBadges.map((badge, idx) => (
+                              <Badge key={idx} variant={badge.variant}>
+                                {badge.label}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(farm.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onViewDetails(farm.id)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
