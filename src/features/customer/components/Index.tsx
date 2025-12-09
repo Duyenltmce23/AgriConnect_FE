@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { Input } from '../../../components/ui/input';
 import { NavigationButton } from './Header/components/NavigationButton';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getCartItems } from '../CartPage/api';
 
@@ -23,8 +23,10 @@ export function Header({
   cartItemsCount = 0,
 }: HeaderProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isLoggedIn = Boolean(localStorage.getItem('token'));
   const [cartCount, setCartCount] = useState(cartItemsCount);
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
 
   useEffect(() => {
     const fetchCartCount = async () => {
@@ -47,6 +49,17 @@ export function Header({
     };
     fetchCartCount();
   }, [isLoggedIn]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (searchInput.trim()) {
+        navigate(`/products?q=${encodeURIComponent(searchInput)}`);
+      } else {
+        navigate('/products');
+      }
+    }
+  };
+
   function onNavigateToAuth() {
     navigate('/auth');
   }
@@ -115,6 +128,9 @@ export function Header({
             <Search className='absolute left-3 h-4 w-4 text-muted-foreground' />
             <Input
               placeholder='Search products...'
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               className='pl-9 w-64 bg-input-background border-border'
             />
           </div>

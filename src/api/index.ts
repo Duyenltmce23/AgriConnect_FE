@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5170/api';
+const BASE_URL = 'http://192.168.1.231:5170/api';
 
 export const API = {
   base: BASE_URL,
@@ -59,9 +59,12 @@ export const API = {
     list: `${BASE_URL}/product-batches`,
     add: `${BASE_URL}/product-batches`,
     get: (batchId: string) => `${BASE_URL}/product-batches/${batchId}`,
-    bySeason: (seasonId: string) => `${BASE_URL}/product-batches/season/${seasonId}`,
-    verifyCareEvents: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/care-events/verify`,
-    harvest: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/harvest`,
+    bySeason: (seasonId: string) =>
+      `${BASE_URL}/product-batches/season/${seasonId}`,
+    verifyCareEvents: (batchId: string) =>
+      `${BASE_URL}/product-batches/${batchId}/care-events/verify`,
+    harvest: (batchId: string) =>
+      `${BASE_URL}/product-batches/${batchId}/harvest`,
     sell: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/sell`,
   },
   cart: {
