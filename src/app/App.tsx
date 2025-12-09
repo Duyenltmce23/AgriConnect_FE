@@ -1,51 +1,51 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { HomePage } from "../features/customer/HomePage/Index";
-import { Auth } from "../features/Auth/Index";
-import { UserProfile } from "../features/customer/UserProfile/Index";
-import { ProductPage } from "../features/customer/ProductPage/Index";
-import { CartPage } from "../features/customer/CartPage/Index";
-import { CheckoutPage } from "../features/customer/CheckoutPage/Index";
-import { OrdersPage } from "../features/customer/OrdersPage/Index";
-import { FarmDetail as AdminFarmDetail } from "../features/admin/FarmDetail/FarmDetail";
-import { UserDetail } from "../features/admin/UserDetail/UserDetail";
-import { AdminProfile } from "../features/admin/AdminProfile/AdminProfile";
-import { OrderDetail } from "../features/farmer/OrderDetail/OrderDetail";
-import { SeasonDetail } from "../features/farmer/SeasonDetail/SeasonDetail";
-import { FarmDetail as FarmerFarmDetail } from "../features/farmer/FarmDetail/FarmDetail";
-import { FarmerProfile } from "../features/farmer/FarmerProfile/FarmerProfile";
-import { Toaster } from "../components/ui/sonner";
-import { toast } from "sonner";
-import type { UserRole } from "../types";
-import { OrderConfirmation } from "../features/customer/OrderConfirmationPage/Index";
-import { OrderDetailPage } from "../features/customer/OrderDetailPage/Index";
-import { OrderPaymentPage } from "../features/customer/OrderPaymentPage/Index";
-import { VNPayReturnPage } from "../features/customer/VNPayReturnPage/Index";
-import { FavoriteListPage } from "../features/customer/FavoriteListPage/Index";
-import { ProductDetail } from "../features/customer/ProductDetail/Index";
-import { TraceabilityView } from "../features/customer/TraceabilityViewPage/Index";
-import { FarmDetail } from "../features/customer/FarmDetail/Index";
-import { NotificationPage } from "../features/customer/NotificationPage/Index";
-import { FeedbackPage } from "../features/customer/FeedbackPage/Index";
-import { Header } from "../features/customer/components/Index";
-import { ErrorPage } from "../components/ErrorPage";
-import type { CartItem } from "../features/customer/CartPage/types";
-import { Routes, Route, Outlet, Navigate } from "react-router-dom";
-import { FarmerLayout } from "../features/farmer/components/FarmerLayout/Index";
-import { FarmerOverview } from "../features/farmer/FarmerOverview/FarmerOverview";
-import { OrderList } from "../features/farmer/OrderList/OrderList";
-import { ProductList } from "../features/farmer/ProductList/ProductList";
-import { SeasonList } from "../features/farmer/SeasonList/SeasonList";
-import { FarmManage } from "../features/farmer/FarmManage/FarmManage";
-import { AdminLayout } from "../features/admin/components/AdminLayout/Index";
-import { AdminStats } from "../features/admin/Overview/AdminStats";
-import { FarmList } from "../features/admin/FarmList/FarmList";
-import { UserList } from "../features/admin/UserList/UserList";
-import { EmailVerifiedPage } from "../features/customer/EmailVerifiedPage/Index";
-import { PaymentResultPage } from "../features/customer/PaymentResultPage/Index";
-import { ProductBatchList } from "../features/farmer/ProductBatchList/ProductBatchList";
-import { ProductBatchDetail } from "../features/farmer/ProductBatchDetail/ProductBatchDetail";
-import FarmsPage from "../features/customer/FarmsPage/Index";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { HomePage } from '../features/customer/HomePage/Index';
+import { Auth } from '../features/Auth/Index';
+import { UserProfile } from '../features/customer/UserProfile/Index';
+import { ProductPage } from '../features/customer/ProductPage/Index';
+import { CartPage } from '../features/customer/CartPage/Index';
+import { CheckoutPage } from '../features/customer/CheckoutPage/Index';
+import { OrdersPage } from '../features/customer/OrdersPage/Index';
+import { FarmDetail as AdminFarmDetail } from '../features/admin/FarmDetail/FarmDetail';
+import { UserDetail } from '../features/admin/UserDetail/UserDetail';
+import { AdminProfile } from '../features/admin/AdminProfile/AdminProfile';
+import { OrderDetail } from '../features/farmer/OrderDetail/OrderDetail';
+import { SeasonDetail } from '../features/farmer/SeasonDetail/SeasonDetail';
+import { FarmDetail as FarmerFarmDetail } from '../features/farmer/FarmDetail/FarmDetail';
+import { FarmerProfile } from '../features/farmer/FarmerProfile/FarmerProfile';
+import { Toaster } from '../components/ui/sonner';
+import { toast } from 'sonner';
+import type { UserRole } from '../types';
+import { OrderConfirmation } from '../features/customer/OrderConfirmationPage/Index';
+import { OrderDetailPage } from '../features/customer/OrderDetailPage/Index';
+import { OrderPaymentPage } from '../features/customer/OrderPaymentPage/Index';
+import { VNPayReturnPage } from '../features/customer/VNPayReturnPage/Index';
+import { FavoriteListPage } from '../features/customer/FavoriteListPage/Index';
+import { ProductDetail } from '../features/customer/ProductDetail/Index';
+import { TraceabilityView } from '../features/customer/TraceabilityViewPage/Index';
+import { FarmDetail } from '../features/customer/FarmDetail/Index';
+import { NotificationPage } from '../features/customer/NotificationPage/Index';
+import { FeedbackPage } from '../features/customer/FeedbackPage/Index';
+import { Header } from '../features/customer/components/Index';
+import { ErrorPage } from '../components/ErrorPage';
+import type { CartItem } from '../features/customer/CartPage/types';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { FarmerLayout } from '../features/farmer/components/FarmerLayout/Index';
+import { FarmerOverview } from '../features/farmer/FarmerOverview/FarmerOverview';
+import { OrderList } from '../features/farmer/OrderList/OrderList';
+import { ProductList } from '../features/farmer/ProductList/ProductList';
+import { SeasonList } from '../features/farmer/SeasonList/SeasonList';
+import { FarmManage } from '../features/farmer/FarmManage/FarmManage';
+import { AdminLayout } from '../features/admin/components/AdminLayout/Index';
+import { AdminStats } from '../features/admin/Overview/AdminStats';
+import { FarmList } from '../features/admin/FarmList/FarmList';
+import { UserList } from '../features/admin/UserList/UserList';
+import { EmailVerifiedPage } from '../features/customer/EmailVerifiedPage/Index';
+import { PaymentResultPage } from '../features/customer/PaymentResultPage/Index';
+import { ProductBatchList } from '../features/farmer/ProductBatchList/ProductBatchList';
+import { ProductBatchDetail } from '../features/farmer/ProductBatchDetail/ProductBatchDetail';
+import FarmsPage from '../features/customer/FarmsPage/Index';
 
 type Page =
   | 'home'
@@ -83,7 +83,7 @@ export default function App() {
   const [cartRefreshKey, setCartRefreshKey] = useState(0);
   const [careEvents, setCareEvents] = useState<any[]>([]);
   const [traceabilityErrorMessage, setTraceabilityErrorMessage] =
-    useState<string>("");
+    useState<string>('');
 
   const handleLogin = () => {
     if (userRole === ('Admin' as UserRole)) {
@@ -250,9 +250,9 @@ export default function App() {
               />
             }
           />
-          <Route path="/farm/:farmId" element={<FarmDetail />} />
+          <Route path='/farm/:farmId' element={<FarmDetail />} />
           <Route
-            path="/traceability"
+            path='/traceability'
             element={
               <TraceabilityView
                 careEvents={careEvents}
@@ -262,12 +262,12 @@ export default function App() {
             }
           />
           <Route element={<CustomerRedirect />}>
-            <Route path="/profile" element={<UserProfile />} />
+            <Route path='/profile' element={<UserProfile />} />
             <Route
-              path="/orders"
+              path='/orders'
               element={<OrdersPage onNavigateToFeedback={() => {}} />}
             />
-            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+            <Route path='/orders/:orderId' element={<OrderDetailPage />} />
             <Route
               path='/cart'
               element={
@@ -286,9 +286,9 @@ export default function App() {
               path='/payments/vnpay-return'
               element={<VNPayReturnPage />}
             />
-            <Route path="/payment-result" element={<PaymentResultPage />} />
+            <Route path='/payment-result' element={<PaymentResultPage />} />
             <Route
-              path="/order-confirmation"
+              path='/order-confirmation'
               element={
                 <OrderConfirmation
                   onViewOrders={() => setCurrentPage('orders')}
@@ -315,24 +315,24 @@ export default function App() {
         </Route>
         {/* Farmer Routes */}
         <Route element={<FarmerLayout />}>
-          <Route path="/farmer" element={<FarmerOverview />} />
-          <Route path="/farmer/overview" element={<FarmerOverview />} />
-          <Route path="/farmer/profile" element={<FarmerProfile />} />
-          <Route path="/farmer/orders" element={<OrderList />} />
-          <Route path="/farmer/orders/:orderId" element={<OrderDetail />} />
-          <Route path="/farmer/products" element={<ProductList />} />
+          <Route path='/farmer' element={<FarmerOverview />} />
+          <Route path='/farmer/overview' element={<FarmerOverview />} />
+          <Route path='/farmer/profile' element={<FarmerProfile />} />
+          <Route path='/farmer/orders' element={<OrderList />} />
+          <Route path='/farmer/orders/:orderId' element={<OrderDetail />} />
+          <Route path='/farmer/products' element={<ProductList />} />
           <Route
-            path="/farmer/product-batches"
+            path='/farmer/product-batches'
             element={<ProductBatchList />}
           />
           <Route
-            path="/farmer/product-batches/:batchId"
+            path='/farmer/product-batches/:batchId'
             element={<ProductBatchDetail />}
           />
-          <Route path="/farmer/seasons" element={<SeasonList />} />
-          <Route path="/farmer/farms" element={<FarmManage />} />
-          <Route path="/farmer/seasons/:seasonId" element={<SeasonDetail />} />
-          <Route path="/farmer/farms/:farmId" element={<FarmerFarmDetail />} />
+          <Route path='/farmer/seasons' element={<SeasonList />} />
+          <Route path='/farmer/farms' element={<FarmManage />} />
+          <Route path='/farmer/seasons/:seasonId' element={<SeasonDetail />} />
+          <Route path='/farmer/farms/:farmId' element={<FarmerFarmDetail />} />
         </Route>
         {/* Admin Routes */}
         <Route element={<AdminLayout />}>
