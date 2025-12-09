@@ -1,4 +1,4 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from "../../../types";
 
 interface Account {
   userName: string;
@@ -12,7 +12,7 @@ interface Account {
   id: string;
 }
 
-interface User {
+interface UserProfile {
   fullname: string;
   email: string;
   phone: string;
@@ -23,5 +23,6 @@ interface User {
   id: string;
 }
 
-type GetUserListResponse = ApiResponse<User[]>;
-export type { User, Account, GetUserListResponse };
+type GetUserProfileResponse = ApiResponse<UserProfile>;
+
+export type { UserProfile, Account, GetUserProfileResponse };

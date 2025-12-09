@@ -29,12 +29,14 @@ export function UserList() {
     navigate(`/admin/users/${userId}`);
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.phone.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users
+    .filter(
+      (user) =>
+        user.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.phone.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Pagination logic
   const totalItems = filteredUsers.length;
@@ -106,13 +108,15 @@ export function UserList() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Created At</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -125,6 +129,12 @@ export function UserList() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {user.phone}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{user.account?.role || "N/A"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(user.createdAt).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Button

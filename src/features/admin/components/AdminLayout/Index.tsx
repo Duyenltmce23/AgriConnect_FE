@@ -6,12 +6,14 @@ import {
   User,
   Users,
   Warehouse,
+  Tag,
+  Package,
 } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "../../../../components/ui/button";
 import { use, useState } from "react";
 
-type Tab = "overview" | "farms" | "users" | "reports";
+type Tab = "overview" | "farms" | "users" | "categories" | "products" | "reports";
 
 export const AdminLayout = () => {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -28,6 +30,10 @@ export const AdminLayout = () => {
       navigate("/admin/farms");
     } else if (id === "users") {
       navigate("/admin/users");
+    } else if (id === "categories") {
+      navigate("/admin/categories");
+    } else if (id === "products") {
+      navigate("/admin/products");
     }
   };
 
@@ -43,6 +49,8 @@ export const AdminLayout = () => {
     { id: "overview" as Tab, label: "Overview", icon: LayoutDashboard },
     { id: "farms" as Tab, label: "Farms", icon: Warehouse },
     { id: "users" as Tab, label: "Users", icon: Users },
+    { id: "categories" as Tab, label: "Categories", icon: Tag },
+    { id: "products" as Tab, label: "Products", icon: Package },
   ];
 
   return (

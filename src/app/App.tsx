@@ -41,6 +41,8 @@ import { AdminLayout } from '../features/admin/components/AdminLayout/Index';
 import { AdminStats } from '../features/admin/Overview/AdminStats';
 import { FarmList } from '../features/admin/FarmList/FarmList';
 import { UserList } from '../features/admin/UserList/UserList';
+import { CategoryList } from '../features/admin/CategoryList/CategoryList';
+import { ProductList as AdminProductList } from '../features/admin/ProductList/ProductList';
 import { EmailVerifiedPage } from '../features/customer/EmailVerifiedPage/Index';
 import { PaymentResultPage } from '../features/customer/PaymentResultPage/Index';
 import { ProductBatchList } from '../features/farmer/ProductBatchList/ProductBatchList';
@@ -342,6 +344,8 @@ export default function App() {
           <Route path='/admin/farms/:farmId' element={<AdminFarmDetail />} />
           <Route path='/admin/users' element={<UserList />} />
           <Route path='/admin/users/:userId' element={<UserDetail />} />
+          <Route path='/admin/categories' element={<CategoryList />} />
+          <Route path='/admin/products' element={<AdminProductList />} />
         </Route>
         {/* Error Route */}
         <Route
