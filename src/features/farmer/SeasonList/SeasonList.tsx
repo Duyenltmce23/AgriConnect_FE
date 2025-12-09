@@ -157,7 +157,7 @@ export function SeasonList() {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://192.168.1.231:5170/api/products", {
+        const response = await fetch("http://localhost:5170/api/products", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
