@@ -31,17 +31,20 @@ import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { getSeasons } from "./api";
+import { getSeasons, createSeason } from "./api";
 import type { Season } from "./types";
+import type { Product } from "../ProductList/types";
 
 
 export function SeasonList() {
   const [farm, setFarm] = useState<{ id: string; name: string } | null>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   function onViewDetails(seasonId: string) {
@@ -67,14 +70,48 @@ export function SeasonList() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentSeasons = filteredSeasons.slice(startIndex, endIndex);
 
-  const handleCreateSeason = () => {
+  const handleCreateSeason = async () => {
     if (!seasonName || !product || !startDate || !endDate) {
       toast.error("Please fill in all required fields");
       return;
     }
-    toast.success("Season created successfully");
-    setShowCreateDialog(false);
-    resetForm();
+
+    const farmId = localStorage.getItem("farmId");
+    if (!farmId) {
+      toast.error("Farm ID not found. Please select a farm first.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        seasonName,
+        seasonDesc: description,
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        farmId,
+        productId: product,
+      };
+
+      const response = await createSeason(payload);
+      if (response.success) {
+        toast.success("Season created successfully");
+        setShowCreateDialog(false);
+        resetForm();
+        // Refresh seasons list
+        const seasonsResponse = await getSeasons();
+        if (seasonsResponse.success && seasonsResponse.data) {
+          setSeasons(seasonsResponse.data);
+        }
+      } else {
+        toast.error(response.message || "Failed to create season");
+      }
+    } catch (error) {
+      console.error("Error creating season:", error);
+      toast.error("Error creating season");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -93,6 +130,8 @@ export function SeasonList() {
         return "bg-gray-100 text-gray-800";
       case "Upcoming":
         return "bg-blue-100 text-blue-800";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -112,6 +151,26 @@ export function SeasonList() {
       }
     };
     fetchSeasons();
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://192.168.1.231:5170/api/products", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (data.success && data.data) {
+          setProducts(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+    fetchProducts();
   }, []);
   return (
     <div className="space-y-6">
@@ -269,12 +328,11 @@ export function SeasonList() {
                   <SelectValue placeholder="Select product" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Tomatoes">Tomatoes</SelectItem>
-                  <SelectItem value="Peppers">Peppers</SelectItem>
-                  <SelectItem value="Spinach">Spinach</SelectItem>
-                  <SelectItem value="Kale">Kale</SelectItem>
-                  <SelectItem value="Apples">Apples</SelectItem>
-                  <SelectItem value="Strawberries">Strawberries</SelectItem>
+                  {products.map((prod) => (
+                    <SelectItem key={prod.id} value={prod.id}>
+                      {prod.productName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -305,11 +363,11 @@ export function SeasonList() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }}>
+            <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }} disabled={isLoading}>
               Cancel
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={handleCreateSeason}>
-              Create Season
+            <Button className="bg-green-600 hover:bg-green-700" onClick={handleCreateSeason} disabled={isLoading}>
+              {isLoading ? "Creating..." : "Create Season"}
             </Button>
           </DialogFooter>
         </DialogContent>

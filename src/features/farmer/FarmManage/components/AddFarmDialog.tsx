@@ -52,8 +52,11 @@ export function AddFarmDialog({
   const [wards, setWards] = useState<Ward[]>([]);
 
   const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedProvinceName, setSelectedProvinceName] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedDistrictName, setSelectedDistrictName] = useState("");
   const [selectedWard, setSelectedWard] = useState("");
+  const [selectedWardName, setSelectedWardName] = useState("");
 
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
@@ -70,10 +73,12 @@ export function AddFarmDialog({
   useEffect(() => {
     if (selectedProvince) {
       setSelectedDistrict("");
+      setSelectedDistrictName("");
       setSelectedWard("");
+      setSelectedWardName("");
       setDistricts([]);
       setWards([]);
-      fetchDistricts(Number(selectedProvince));
+      fetchDistricts(selectedProvince);
     }
   }, [selectedProvince]);
 
@@ -81,8 +86,9 @@ export function AddFarmDialog({
   useEffect(() => {
     if (selectedDistrict) {
       setSelectedWard("");
+      setSelectedWardName("");
       setWards([]);
-      fetchWards(Number(selectedDistrict));
+      fetchWards(selectedDistrict);
     }
   }, [selectedDistrict]);
 
@@ -99,7 +105,7 @@ export function AddFarmDialog({
     }
   };
 
-  const fetchDistricts = async (provinceCode: number) => {
+  const fetchDistricts = async (provinceCode: string) => {
     setIsLoadingDistricts(true);
     try {
       const data = await getDistricts(provinceCode);
@@ -112,7 +118,7 @@ export function AddFarmDialog({
     }
   };
 
-  const fetchWards = async (districtCode: number) => {
+  const fetchWards = async (districtCode: string) => {
     setIsLoadingWards(true);
     try {
       const data = await getWards(districtCode);
@@ -183,9 +189,9 @@ export function AddFarmDialog({
           phone: phone.trim(),
           area: area.trim(),
           farmerId,
-          province: String(selectedProvince),
-          district: String(selectedDistrict),
-          ward: String(selectedWard),
+          province: selectedProvinceName,
+          district: selectedDistrictName,
+          ward: selectedWardName,
           detail: detail.trim(),
         },
         bannerFile || undefined
@@ -215,8 +221,11 @@ export function AddFarmDialog({
     setArea("");
     setDetail("");
     setSelectedProvince("");
+    setSelectedProvinceName("");
     setSelectedDistrict("");
+    setSelectedDistrictName("");
     setSelectedWard("");
+    setSelectedWardName("");
     setBannerFile(null);
     setBannerPreview(null);
   };
@@ -315,7 +324,11 @@ export function AddFarmDialog({
             </Label>
             <Select
               value={selectedProvince}
-              onValueChange={setSelectedProvince}
+              onValueChange={(code) => {
+                setSelectedProvince(code);
+                const province = provinces.find((p) => String(p.code) === code);
+                setSelectedProvinceName(province?.name || "");
+              }}
               disabled={isLoadingProvinces || isLoading}
             >
               <SelectTrigger>
@@ -338,7 +351,11 @@ export function AddFarmDialog({
             </Label>
             <Select
               value={selectedDistrict}
-              onValueChange={setSelectedDistrict}
+              onValueChange={(code) => {
+                setSelectedDistrict(code);
+                const district = districts.find((d) => String(d.code) === code);
+                setSelectedDistrictName(district?.name || "");
+              }}
               disabled={!selectedProvince || isLoadingDistricts || isLoading}
             >
               <SelectTrigger>
@@ -361,7 +378,11 @@ export function AddFarmDialog({
             </Label>
             <Select
               value={selectedWard}
-              onValueChange={setSelectedWard}
+              onValueChange={(code) => {
+                setSelectedWard(code);
+                const ward = wards.find((w) => String(w.code) === code);
+                setSelectedWardName(ward?.name || "");
+              }}
               disabled={!selectedDistrict || isLoadingWards || isLoading}
             >
               <SelectTrigger>

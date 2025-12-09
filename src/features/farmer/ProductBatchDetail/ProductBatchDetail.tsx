@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Leaf, ShoppingCart } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
@@ -9,6 +9,8 @@ import type { ProductBatchDetail } from "./types";
 import { getProductBatchDetail } from "./api";
 import { AddEventDialog } from "./components/AddEventDialog";
 import { EventList } from "./components/EventList";
+import { HarvestDialog } from "./components/HarvestDialog";
+import { SellDialog } from "./components/SellDialog";
 
 export function ProductBatchDetail() {
   const { batchId } = useParams<{ batchId: string }>();
@@ -18,6 +20,8 @@ export function ProductBatchDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isAddEventDialogOpen, setIsAddEventDialogOpen] = useState(false);
   const [eventRefreshTrigger, setEventRefreshTrigger] = useState(0);
+  const [harvestDialogOpen, setHarvestDialogOpen] = useState(false);
+  const [sellDialogOpen, setSellDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchBatchDetail = async () => {
@@ -31,9 +35,7 @@ export function ProductBatchDetail() {
         if (response.success && response.data) {
           setBatch(response.data);
         } else {
-          setError(
-            response.message || "Failed to load batch details"
-          );
+          setError(response.message || "Failed to load batch details");
           toast.error(response.message || "Failed to load batch details");
         }
       } catch (err) {
@@ -54,6 +56,18 @@ export function ProductBatchDetail() {
 
   const handleEventAdded = () => {
     setEventRefreshTrigger((prev) => prev + 1);
+  };
+
+  const handleBatchUpdated = () => {
+    if (batchId) {
+      const fetchBatchDetail = async () => {
+        const response = await getProductBatchDetail(batchId);
+        if (response.success && response.data) {
+          setBatch(response.data);
+        }
+      };
+      fetchBatchDetail();
+    }
   };
 
   if (isLoading) {
@@ -85,20 +99,40 @@ export function ProductBatchDetail() {
   }
 
   const isInStock = batch.availableQuantity > 0;
-  const imageUrl = batch.imageUrls?.[0] || "https://images.unsplash.com/photo-1565032156168-0a22e5b8374f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwxfHx8fDE3NTk5NTE4OTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
+  const imageUrl =
+    batch.imageUrls?.[0] ||
+    "https://images.unsplash.com/photo-1565032156168-0a22e5b8374f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwxfHx8fDE3NTk5NTE4OTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header with Back Button and Add Event Button */}
+      {/* Header with Back Button and Action Buttons */}
       <div className="flex items-center justify-between mb-6">
         <Button variant="ghost" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <Button onClick={() => setIsAddEventDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Event
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setHarvestDialogOpen(true)}
+            className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 border-yellow-200"
+          >
+            <Leaf className="h-4 w-4 mr-2" />
+            Update Yield
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setSellDialogOpen(true)}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Sell Batch
+          </Button>
+          <Button onClick={() => setIsAddEventDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Event
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -230,8 +264,8 @@ export function ProductBatchDetail() {
                       batch.season.status === "Active"
                         ? "bg-green-100 text-green-800"
                         : batch.season.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
                     }
                   >
                     {batch.season.status}
@@ -291,14 +325,12 @@ export function ProductBatchDetail() {
                   <Badge
                     variant="secondary"
                     className={
-                      !batch.season.farm.isDelete &&
-                      !batch.season.farm.isBanned
+                      !batch.season.farm.isDelete && !batch.season.farm.isBanned
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
                     }
                   >
-                    {!batch.season.farm.isDelete &&
-                    !batch.season.farm.isBanned
+                    {!batch.season.farm.isDelete && !batch.season.farm.isBanned
                       ? "Active"
                       : "Inactive"}
                   </Badge>
@@ -315,9 +347,7 @@ export function ProductBatchDetail() {
               </h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    Product Name
-                  </p>
+                  <p className="text-sm text-muted-foreground">Product Name</p>
                   <p className="font-semibold">
                     {batch.season.product.productName}
                   </p>
@@ -352,7 +382,10 @@ export function ProductBatchDetail() {
 
       {/* Care Events Section */}
       <div className="mt-8">
-        <EventList batchId={batchId || ""} refreshTrigger={eventRefreshTrigger} />
+        <EventList
+          batchId={batchId || ""}
+          refreshTrigger={eventRefreshTrigger}
+        />
       </div>
 
       {/* Add Event Dialog */}
@@ -362,6 +395,31 @@ export function ProductBatchDetail() {
         batchId={batchId || ""}
         onEventAdded={handleEventAdded}
       />
+
+      {/* Harvest Dialog */}
+      {batch && (
+        <HarvestDialog
+          open={harvestDialogOpen}
+          onOpenChange={setHarvestDialogOpen}
+          batchId={batch.id}
+          batchCode={batch.batchCode.value}
+          currentYield={batch.totalYield}
+          onSuccess={handleBatchUpdated}
+        />
+      )}
+
+      {/* Sell Dialog */}
+      {batch && (
+        <SellDialog
+          open={sellDialogOpen}
+          onOpenChange={setSellDialogOpen}
+          batchId={batch.id}
+          batchCode={batch.batchCode.value}
+          availableQuantity={batch.availableQuantity}
+          currentPrice={batch.price}
+          onSuccess={handleBatchUpdated}
+        />
+      )}
     </div>
   );
 }

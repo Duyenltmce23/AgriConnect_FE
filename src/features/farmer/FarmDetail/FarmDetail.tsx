@@ -29,6 +29,8 @@ import { AddFarmDialog } from "../FarmManage/components/AddFarmDialog";
 import { useFarmCheck } from "../../../hooks/useFarmCheck";
 import { getProvinces, getDistricts, getWards } from "../FarmManage/api";
 import type { Province, District, Ward } from "../FarmManage/types";
+import { getFarms } from "../FarmManage/api";
+import useCertificate from "../../../hooks/useCertificate";
 
 interface FarmDetailProps {
   farmId?: string;
@@ -52,6 +54,8 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
   const [isLoadingDistricts, setIsLoadingDistricts] = useState(false);
   const [isLoadingWards, setIsLoadingWards] = useState(false);
+  // Track if user is actively editing (to prevent auto-fetch on initial load)
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
 
   const [formData, setFormData] = useState({
     farmName: "",
@@ -65,7 +69,7 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
   });
   const navigate = useNavigate();
   const { farmId: paramFarmId } = useParams();
-  const { hasFarmId } = useFarmCheck();
+  const { hasFarmId, saveFarmIdToLocalStorage } = useFarmCheck();
 
   // Use prop farmId if provided, otherwise use route param
   const farmId = propFarmId || paramFarmId;
@@ -95,6 +99,7 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
             ward: response.data.address?.ward || "",
             detail: response.data.address?.detail || "",
           });
+          console.log(response.data);
         } else {
           toast.error("Failed to fetch farm details");
         }
@@ -118,7 +123,7 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
     }
   };
 
-  const fetchDistricts = async (provinceCode: number) => {
+  const fetchDistricts = async (provinceCode: string) => {
     setIsLoadingDistricts(true);
     try {
       const data = await getDistricts(provinceCode);
@@ -131,7 +136,7 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
     }
   };
 
-  const fetchWards = async (districtCode: number) => {
+  const fetchWards = async (districtCode: string) => {
     setIsLoadingWards(true);
     try {
       const data = await getWards(districtCode);
@@ -144,9 +149,9 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
     }
   };
 
-  // Load districts when province changes
+  // Load districts when province changes (only if actively editing)
   useEffect(() => {
-    if (formData.province) {
+    if (formData.province && isEditingLocation) {
       setFormData((prev) => ({
         ...prev,
         district: "",
@@ -154,23 +159,27 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
       }));
       setDistricts([]);
       setWards([]);
-      fetchDistricts(Number(formData.province));
+      fetchDistricts(formData.province);
     }
-  }, [formData.province]);
+  }, [formData.province, isEditingLocation]);
 
-  // Load wards when district changes
+  // Load wards when district changes (only if actively editing)
   useEffect(() => {
-    if (formData.district) {
+    if (formData.district && isEditingLocation) {
       setFormData((prev) => ({
         ...prev,
         ward: "",
       }));
       setWards([]);
-      fetchWards(Number(formData.district));
+      console.log(formData.district);
+      fetchWards(formData.district);
     }
-  }, [formData.district]);
+  }, [formData.district, isEditingLocation]);
 
   const handleEditOpen = () => {
+    // Note: Location fields (province, district, ward) cannot be pre-filled because
+    // the backend stores them as names (strings), but the external API requires codes (numbers).
+    // User must reselect location from dropdowns when editing.
     setFormData({
       farmName: farmDetail.farmName,
       farmDesc: farmDetail.farmDesc,
@@ -181,8 +190,20 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
       ward: farmDetail.address?.ward || "",
       detail: farmDetail.address?.detail || "",
     });
-    setBannerFile(undefined);
-    setBannerPreview(null);
+
+    // Load current banner image if exists
+    if (farmDetail.bannerUrl) {
+      setBannerPreview(farmDetail.bannerUrl);
+    } else {
+      setBannerFile(undefined);
+      setBannerPreview(null);
+    }
+
+    // Reset location state
+    setDistricts([]);
+    setWards([]);
+    setIsEditingLocation(true);
+
     fetchProvinces();
     setIsEditOpen(true);
   };
@@ -222,16 +243,21 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
     setBannerPreview(null);
   };
 
+  // Certificate handling (client-side)
+  const { getCertificate, uploadCertificate, removeCertificate } = useCertificate();
+  const [certificatePreview, setCertificatePreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!farmId) return;
+    const cert = getCertificate(farmId);
+    setCertificatePreview(cert ? cert.imageBase64 : null);
+  }, [farmId]);
+
   const handleUpdateSubmit = async () => {
     if (
       !formData.farmName ||
       !formData.farmDesc ||
       !formData.phone ||
-      !formData.area ||
-      !formData.province ||
-      !formData.district ||
-      !formData.ward ||
-      !formData.detail
+      !formData.area
     ) {
       toast.error("Please fill in all required fields");
       return;
@@ -314,11 +340,15 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
             // Refresh farm details after adding
             const fetchFarmDetails = async () => {
               try {
-                const response = await getFarmDetail(farmId || "");
-                if (response.success && response.data) {
-                  setFarmDetail(response.data);
-                  setShowAddFarmDialog(false);
-                  toast.success("Farm created successfully!");
+                const farmsResponse = await getFarms();
+                if (farmsResponse.success && farmsResponse.data) {
+                  saveFarmIdToLocalStorage(farmsResponse.data.id);
+                  const response = await getFarmDetail(farmsResponse.data.id);
+                  if (response.success && response.data) {
+                    setFarmDetail(response.data);
+                    setShowAddFarmDialog(false);
+                    toast.success("Farm created successfully!");
+                  }
                 }
               } catch (error) {
                 console.error("Error fetching farm details:", error);
@@ -394,12 +424,7 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
               <p className="text-sm text-muted-foreground">Phone</p>
               <p className="text-base font-medium">{farmDetail.phone}</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Batch Code Prefix</p>
-              <p className="text-base font-medium">
-                {farmDetail.batchCodePrefix}
-              </p>
-            </div>
+
             <div>
               <p className="text-sm text-muted-foreground">Created Date</p>
               <p className="text-base font-medium">
@@ -415,40 +440,55 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
           )}
         </Card>
 
-        {/* Farmer Information */}
-        {farmDetail.farmer && (
+          {/* Certificate Section */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">
-              Owner Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-muted-foreground">Owner Name</p>
-                <p className="text-base font-medium">
-                  {farmDetail.farmer.profile?.fullname}
-                </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Certificate</h3>
+            {certificatePreview ? (
+              <div className="space-y-3">
+                <img src={certificatePreview} alt="certificate" className="w-64 h-auto object-contain rounded shadow" />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      // remove
+                      if (!farmId) return;
+                      removeCertificate(farmId);
+                      setCertificatePreview(null);
+                      toast.success("Certificate removed");
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Username</p>
-                <p className="text-base font-medium">
-                  {farmDetail.farmer.userName}
-                </p>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">No certificate uploaded yet.</p>
+                <input
+                  id="certificate"
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !farmId) return;
+                    if (!file.type.startsWith("image/")) {
+                      toast.error("Please select an image file");
+                      return;
+                    }
+                    try {
+                      const accountId = localStorage.getItem("accountId") || undefined;
+                      const entry = await uploadCertificate(farmId, file, accountId);
+                      setCertificatePreview(entry.imageBase64);
+                      toast.success("Certificate uploaded (client-side)");
+                    } catch (err) {
+                      console.error(err);
+                      toast.error("Failed to upload certificate");
+                    }
+                  }}
+                />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="text-base font-medium break-all">
-                  {farmDetail.farmer.profile?.email}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Contact Phone</p>
-                <p className="text-base font-medium">
-                  {farmDetail.farmer.profile?.phone}
-                </p>
-              </div>
-            </div>
+            )}
           </Card>
-        )}
 
         {/* Location Information */}
         {farmDetail.address && (
@@ -563,13 +603,24 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
       </div>
 
       {/* Edit Farm Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-2xl flex flex-col max-h-full">
+      <Dialog
+        open={isEditOpen}
+        onOpenChange={(open) => {
+          setIsEditOpen(open);
+          if (!open) {
+            setIsEditingLocation(false);
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-2xl flex flex-col"
+          style={{
+            maxHeight: "90vh",
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Edit Farm</DialogTitle>
-            <DialogDescription>
-              Update farm information. All fields are required.
-            </DialogDescription>
+            <DialogDescription>Update farm information.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 overflow-y-auto flex-1">
@@ -619,118 +670,49 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
               />
             </div>
 
-            {/* Province */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                Province <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.province}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    province: value,
-                  }))
-                }
-                disabled={isLoadingProvinces || isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select province" />
-                </SelectTrigger>
-                <SelectContent>
-                  {provinces.map((province) => (
-                    <SelectItem
-                      key={province.code}
-                      value={String(province.code)}
-                    >
-                      {province.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* District */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                District <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.district}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    district: value,
-                  }))
-                }
-                disabled={!formData.province || isLoadingDistricts || isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select district" />
-                </SelectTrigger>
-                <SelectContent>
-                  {districts.map((district) => (
-                    <SelectItem
-                      key={district.code}
-                      value={String(district.code)}
-                    >
-                      {district.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Ward */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                Ward <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.ward}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    ward: value,
-                  }))
-                }
-                disabled={!formData.district || isLoadingWards || isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select ward" />
-                </SelectTrigger>
-                <SelectContent>
-                  {wards.map((ward) => (
-                    <SelectItem key={ward.code} value={String(ward.code)}>
-                      {ward.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Detail Address */}
-            <div className="space-y-2">
-              <Label htmlFor="detail" className="text-sm font-medium">
-                Detail Address <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="detail"
-                name="detail"
-                value={formData.detail}
-                onChange={handleInputChange}
-                placeholder="Enter detailed address"
-                rows={2}
-                disabled={isLoading}
-              />
-            </div>
-
             {/* Farm Banner */}
             <div className="space-y-2">
               <Label htmlFor="banner" className="text-sm font-medium">
                 Farm Banner
               </Label>
-              {!bannerPreview ? (
+              {bannerPreview ? (
+                <div className="space-y-2">
+                  <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                    <img
+                      src={bannerPreview}
+                      alt="Banner Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveBanner}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      disabled={isLoading}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {bannerFile ? (
+                      <>
+                        {bannerFile.name} (
+                        {`${((bannerFile.size || 0) / 1024 / 1024).toFixed(2)}`}{" "}
+                        MB)
+                      </>
+                    ) : (
+                      "Current banner image"
+                    )}
+                  </p>
+                  <input
+                    id="banner"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerChange}
+                    className="block w-full text-sm text-gray-600"
+                    disabled={isLoading}
+                  />
+                </div>
+              ) : (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition">
                   <input
                     id="banner"
@@ -749,29 +731,6 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
                       PNG, JPG, GIF up to 10MB
                     </p>
                   </label>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="relative w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
-                    <img
-                      src={bannerPreview}
-                      alt="Banner Preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveBanner}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                      disabled={isLoading}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    {bannerFile?.name} (
-                    {`${((bannerFile?.size || 0) / 1024 / 1024).toFixed(2)}`}{" "}
-                    MB)
-                  </p>
                 </div>
               )}
             </div>

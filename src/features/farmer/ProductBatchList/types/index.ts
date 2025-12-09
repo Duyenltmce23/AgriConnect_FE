@@ -19,8 +19,20 @@ interface ProductBatch {
   id: string;
 }
 
+interface ProductBatchCreate {
+  batchId: string;
+  batchCode: BatchCode;
+  totalYield: number;
+  availableQuantity: number;
+  units: string;
+  price: number;
+  plantingDate: string;
+  seasonId: string;
+}
+
 type ProductBatchListResponse = ApiResponse<ProductBatch[]>;
 type ProductBatchDetailResponse = ApiResponse<ProductBatchDetail>;
+type ProductBatchCreateResponse = ApiResponse<ProductBatchCreate>;
 
 interface Season {
   seasonName: string;
@@ -75,6 +87,8 @@ export type {
   ProductBatch,
   ProductBatchListResponse,
   ProductBatchDetailResponse,
+  ProductBatchCreateResponse,
+  ProductBatchCreate,
   Season,
   Product,
   Farm,

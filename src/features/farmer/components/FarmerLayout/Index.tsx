@@ -1,22 +1,11 @@
-import { Calendar, Leaf, LogOut, Package, ShoppingBag, User, Warehouse } from "lucide-react";
+import { Calendar, Leaf, LogOut, Package, ShoppingBag, User, Warehouse, BarChart3 } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { OrderList } from "../../OrderList/OrderList";
-import { SeasonList } from "../../SeasonList/SeasonList";
-import { FarmManage } from "../../FarmManage/FarmManage";
-import { ProductList } from "../../ProductList/ProductList";
 import { FarmRequiredDialog } from "../FarmRequiredDialog";
 import { useFarmCheck } from "../../../../hooks/useFarmCheck";
 
-interface FarmerDashboardProps {
-    onNavigateToProfile: () => void;
-    onNavigateToOrderDetail: (orderId: string) => void;
-    onNavigateToSeasonDetail: (seasonId: string) => void;
-    onNavigateToFarmDetail: (farmId: string) => void;
-}
-
-type Tab = "orders" | "products" | "product-batches" | "seasons" | "farms";
+type Tab = "overview" | "orders" | "products" | "product-batches" | "seasons" | "farms";
 
 export function FarmerLayout() {
     const location = useLocation();
@@ -28,7 +17,7 @@ export function FarmerLayout() {
     const activeTab = segments[segments.length - 1] as Tab;
 
     // Tabs that require a valid farm ID
-    const farmRequiredTabs: Tab[] = ["orders", "products", "product-batches", "seasons"];
+    const farmRequiredTabs: Tab[] = ["overview", "orders", "products", "product-batches", "seasons"];
 
     function onNavigateToProfile() {
         navigate("/farmer/profile");
@@ -42,6 +31,7 @@ export function FarmerLayout() {
         navigate(`/farmer/${tab}`);
     }
     const navItems = [
+        { id: "overview" as Tab, label: "Overview", icon: BarChart3 },
         { id: "orders" as Tab, label: "Orders", icon: ShoppingBag },
         { id: "products" as Tab, label: "Products", icon: Package },
         { id: "product-batches" as Tab, label: "Product Batches", icon: Warehouse },

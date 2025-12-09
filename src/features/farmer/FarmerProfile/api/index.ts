@@ -1,9 +1,13 @@
 import axios from "axios";
 import { API } from "../../../../api";
-import type { FarmResponse, SeasonListResponse } from "../types";
-import type { ApiResponse } from "../../../../types";
+import type {
+  DeleteFarmerAccountResponse,
+  FarmerProfileInfo,
+  FarmerProfileResponse,
+  UpdateFarmerProfileResponse,
+} from "../types";
 
-export async function getSeasons(): Promise<SeasonListResponse> {
+export async function getFarmerProfile(): Promise<FarmerProfileResponse> {
   try {
     const token = localStorage.getItem("token");
     const api = axios.create({
@@ -11,8 +15,8 @@ export async function getSeasons(): Promise<SeasonListResponse> {
         Authorization: `Bearer ${token}`,
       },
     });
-    const url = API.season.list;
-    const response = await api.get<SeasonListResponse>(url);
+    const url = API.profile.me;
+    const response = await api.get<FarmerProfileResponse>(url);
     const responseData = response.data;
     return responseData;
   } catch (error: any) {
@@ -24,16 +28,24 @@ export async function getSeasons(): Promise<SeasonListResponse> {
   }
 }
 
-export async function getSeasonsByFarm(farmId: string): Promise<SeasonListResponse> {
+export async function updateFarmerProfile(
+  request: FarmerProfileInfo
+): Promise<UpdateFarmerProfileResponse> {
   try {
+    const farmerId = request.id;
+    const { fullname, email, phone } = request;
     const token = localStorage.getItem("token");
     const api = axios.create({
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    const url = API.season.byFarm(farmId);
-    const response = await api.get<SeasonListResponse>(url);
+    const url = API.profile.update(farmerId);
+    const response = await api.put<UpdateFarmerProfileResponse>(url, {
+      fullname,
+      email,
+      phone,
+    });
     const responseData = response.data;
     return responseData;
   } catch (error: any) {
@@ -45,14 +57,7 @@ export async function getSeasonsByFarm(farmId: string): Promise<SeasonListRespon
   }
 }
 
-export async function createSeason(data: {
-  seasonName: string;
-  seasonDesc: string;
-  startDate: string;
-  endDate: string;
-  farmId: string;
-  productId: string;
-}): Promise<ApiResponse<any>> {
+export async function deleteFarmerAccount(): Promise<DeleteFarmerAccountResponse> {
   try {
     const token = localStorage.getItem("token");
     const api = axios.create({
@@ -60,8 +65,8 @@ export async function createSeason(data: {
         Authorization: `Bearer ${token}`,
       },
     });
-    const url = API.season.add;
-    const response = await api.post<ApiResponse<any>>(url, data);
+    const url = API.auth.deactive;
+    const response = await api.patch<DeleteFarmerAccountResponse>(url);
     const responseData = response.data;
     return responseData;
   } catch (error: any) {

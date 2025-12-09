@@ -33,10 +33,6 @@ export const updateFarm = async (
     formData.append("farmDesc", farmData.farmDesc);
     formData.append("phone", farmData.phone);
     formData.append("area", farmData.area);
-    formData.append("province", farmData.province);
-    formData.append("district", farmData.district);
-    formData.append("ward", farmData.ward);
-    formData.append("detail", farmData.detail);
 
     if (bannerFile) {
       formData.append("farmBanner", bannerFile);

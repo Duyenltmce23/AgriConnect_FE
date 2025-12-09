@@ -48,6 +48,7 @@ export const API = {
   },
   season: {
     list: `${BASE_URL}/seasons`,
+    byFarm: (farmId: string) => `${BASE_URL}/seasons/farm/${farmId}`,
     add: `${BASE_URL}/seasons`,
     get: (seasonId: string) => `${BASE_URL}/seasons/${seasonId}`,
     update: (seasonId: string) => `${BASE_URL}/seasons/${seasonId}`,
@@ -56,9 +57,12 @@ export const API = {
   },
   productBatch: {
     list: `${BASE_URL}/product-batches`,
+    add: `${BASE_URL}/product-batches`,
     get: (batchId: string) => `${BASE_URL}/product-batches/${batchId}`,
-    verifyCareEvents: (batchId: string) =>
-      `${BASE_URL}/product-batches/${batchId}/care-events/verify`,
+    bySeason: (seasonId: string) => `${BASE_URL}/product-batches/season/${seasonId}`,
+    verifyCareEvents: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/care-events/verify`,
+    harvest: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/harvest`,
+    sell: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/sell`,
   },
   cart: {
     me: `${BASE_URL}/carts/me`,
