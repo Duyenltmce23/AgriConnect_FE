@@ -5,6 +5,7 @@ import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { getFarmDetails, getFarmProductBatches } from './api';
+import useCertificate from '../../../hooks/useCertificate';
 import type { FarmData, ProductBatch } from './types';
 import { ProductBatchCard } from './components/ProductBatchCard';
 import { addFavoriteFarm, getMyFavoriteFarms } from '../FavoriteFarms/api';
@@ -231,6 +232,25 @@ export function FarmDetail() {
               </p>
             </div>
           </div>
+        </Card>
+        {/* Certificate section for customers */}
+        <Card className='p-6 mt-6'>
+          <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+            Certificate
+          </h3>
+          {farm.certificateUrl ? (
+            <div>
+              <img
+                src={farm.certificateUrl}
+                alt='certificate'
+                className='w-64 h-auto object-contain rounded shadow'
+              />
+            </div>
+          ) : (
+            <p className='text-sm text-muted-foreground'>
+              This farm has not uploaded a certificate yet.
+            </p>
+          )}
         </Card>
       </div>
 

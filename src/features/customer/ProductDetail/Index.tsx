@@ -3,6 +3,8 @@ import { ArrowLeft } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { ProductDetailInfo } from "./components/ProductDetailInfo";
+import Reviews from "./components/Reviews";
+import VerificationQRCode from "./components/VerificationQRCode";
 import { getProductDetails } from "../ProductDetail/api";
 import { useCart } from "../../../hooks/useCart";
 import type { ProductDetail, CareEvent } from "./types";
@@ -106,6 +108,16 @@ export function ProductDetail({
           isLoading={isLoading}
         />
         <ProductDetailInfo product={product} />
+
+        {/* Verification QR Code - easy to scan */}
+        {product.farmId && product.id && (
+          <VerificationQRCode farmId={product.farmId} productId={product.id} />
+        )}
+
+        {/* Reviews component (client-side mock storage) */}
+        {product.farmId && product.id && (
+          <Reviews farmId={product.farmId} productId={product.id} />
+        )}
       </div>
     </div>
   );

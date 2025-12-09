@@ -29,7 +29,7 @@ interface Farm {
     updatedAt: string;
     farmerId: string;
     addressId: string;
-    seasons: any[];
+    seasons: Season[];
 }
 
 interface Product {
@@ -38,7 +38,7 @@ interface Product {
     productAttribute: string;
     productDesc: string;
     categoryId: string;
-    seasons: any[];
+    seasons: Season[];
     createdAt: string;
 }
 
@@ -55,7 +55,7 @@ interface Season {
     farm: Farm;
     productId: string;
     product: Product;
-    productBatches: any[];
+    productBatches: ProductBatchData[];
 }
 
 interface ProductBatchData {
@@ -69,6 +69,7 @@ interface ProductBatchData {
     seasonId: string;
     season: Season;
     imageUrls: string[];
+    verificationQr: string;
     createdAt: string;
     updatedAt: string;
     id: string;
