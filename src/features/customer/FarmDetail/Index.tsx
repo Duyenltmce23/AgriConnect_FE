@@ -5,7 +5,6 @@ import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { getFarmDetails, getFarmProductBatches } from './api';
-import useCertificate from '../../../hooks/useCertificate';
 import type { FarmData, ProductBatch } from './types';
 import { ProductBatchCard } from './components/ProductBatchCard';
 import { addFavoriteFarm, getMyFavoriteFarms } from '../FavoriteFarms/api';
