@@ -8,6 +8,7 @@ import {
   Minus,
   Trash2,
 } from 'lucide-react';
+import { Footer } from '../components';
 import type { CartData } from './types';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -42,6 +43,9 @@ export function CartPage({
   const [error, setError] = useState<string | null>(null);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [deletingAll, setDeletingAll] = useState(false);
+  const [quantityInputs, setQuantityInputs] = useState<
+    Record<string, number>
+  >({});
 
   const cartItemCount =
     cartData?.cartItems
@@ -399,9 +403,54 @@ export function CartPage({
                                   >
                                     <Minus className='h-3 w-3' />
                                   </Button>
-                                  <span className='w-8 text-center text-sm font-medium'>
-                                    {item.quantity}
-                                  </span>
+                                  <input
+                                    type='number'
+                                    min='1'
+                                    value={
+                                      quantityInputs[item.itemId] ??
+                                      item.quantity
+                                    }
+                                    onChange={(e) => {
+                                      setQuantityInputs((prev) => ({
+                                        ...prev,
+                                        [item.itemId]: parseInt(
+                                          e.target.value,
+                                          10
+                                        ),
+                                      }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        const newQuantity =
+                                          quantityInputs[item.itemId] ??
+                                          item.quantity;
+                                        if (
+                                          !isNaN(newQuantity) &&
+                                          newQuantity >= 1
+                                        ) {
+                                          handleUpdateQuantity(
+                                            item.itemId,
+                                            item.batchId,
+                                            newQuantity
+                                          );
+                                          setQuantityInputs((prev) => {
+                                            const updated = { ...prev };
+                                            delete updated[item.itemId];
+                                            return updated;
+                                          });
+                                        }
+                                      }
+                                    }}
+                                    onBlur={() => {
+                                      setQuantityInputs((prev) => {
+                                        const updated = { ...prev };
+                                        delete updated[item.itemId];
+                                        return updated;
+                                      });
+                                    }}
+                                    disabled={updatingItems.has(item.itemId)}
+                                    className='w-12 text-center text-sm font-medium border-0 outline-none'
+                                  />
                                   <Button
                                     variant='ghost'
                                     size='icon'
@@ -417,6 +466,9 @@ export function CartPage({
                                   >
                                     <Plus className='h-3 w-3' />
                                   </Button>
+                                  <span className='text-xs text-gray-600 ml-1 min-w-fit'>
+                                    KG
+                                  </span>
                                 </div>
                                 <Button
                                   variant='ghost'
@@ -537,6 +589,7 @@ export function CartPage({
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

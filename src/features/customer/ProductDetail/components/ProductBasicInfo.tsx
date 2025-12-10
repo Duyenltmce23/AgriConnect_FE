@@ -6,6 +6,7 @@ import { Card } from "../../../../components/ui/card";
 import { verifyCareEvents } from "../api";
 import { toast } from "sonner";
 import type { ProductDetail, CareEvent } from "../types";
+import { ImageCarousel } from "./ImageCarousel";
 
 interface ProductBasicInfoProps {
   product: ProductDetail;
@@ -58,12 +59,11 @@ export function ProductBasicInfo({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Product Image */}
+      {/* Product Image Carousel */}
       <div>
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-96 object-cover rounded-lg"
+        <ImageCarousel
+          images={product.images || [product.image]}
+          productName={product.name}
         />
       </div>
 

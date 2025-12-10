@@ -21,6 +21,7 @@ import { OrderHistory } from './components/OrderHistory';
 import { DeleteAccountDialog } from './components/DeleteAccountDialog';
 import { InfoRow } from './components/InfoRow';
 import { InputRow } from './components/InputRow';
+import { Footer } from '../components';
 import type { Order, UserInfo } from './types';
 import {
   deleteUserInfo,
@@ -161,42 +162,42 @@ export function UserProfile() {
   }, []);
   return (
     <div>
-      <div className='container mx-auto px-4 py-8'>
-        <div className='max-w-4xl mx-auto'>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
           {/* Profile Header */}
-          <Card className='mb-6'>
-            <CardContent className='pt-6'>
-              <div className='flex flex-col md:flex-row items-center gap-6'>
-                <Avatar className='w-24 h-24'>
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <Avatar className="w-24 h-24">
                   <AvatarImage src={null} />
-                  <AvatarFallback className='bg-green-600 text-white text-2xl'>
+                  <AvatarFallback className="bg-green-600 text-white text-2xl">
                     {getInitials(userInfo.fullname)}
                   </AvatarFallback>
                 </Avatar>
-                <div className='flex-1 text-center md:text-left'>
-                  <h2 className='mb-2'>{userInfo.fullname}</h2>
-                  <p className='text-muted-foreground'>{userInfo.email}</p>
-                  <div className='flex gap-2 mt-4 justify-center md:justify-start'>
+                <div className="flex-1 text-center md:text-left">
+                  <h2 className="mb-2">{userInfo.fullname}</h2>
+                  <p className="text-muted-foreground">{userInfo.email}</p>
+                  <div className="flex gap-2 mt-4 justify-center md:justify-start">
                     {!isEditing && (
                       <Button
                         onClick={() => setIsEditing(true)}
-                        className='bg-green-600 hover:bg-green-700'
+                        className="bg-green-600 hover:bg-green-700"
                       >
-                        <Edit2 className='mr-2 w-4 h-4' />
+                        <Edit2 className="mr-2 w-4 h-4" />
                         Edit Profile
                       </Button>
                     )}
                     <Button
-                      variant='outline'
+                      variant="outline"
                       onClick={onLogout}
-                      className='border-red-600 text-red-600 hover:bg-red-50'
+                      className="border-red-600 text-red-600 hover:bg-red-50"
                     >
                       Logout
                     </Button>
                     <Button
-                      variant='outline'
+                      variant="outline"
                       onClick={() => setShowDeleteDialog(true)}
-                      className='border-red-600 text-red-600 hover:bg-red-50'
+                      className="border-red-600 text-red-600 hover:bg-red-50"
                     >
                       Delete Account
                     </Button>
@@ -217,15 +218,15 @@ export function UserProfile() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className='space-y-6'>
+              <div className="space-y-6">
                 {/* Name Field */}
-                <div className='space-y-2'>
-                  <Label htmlFor='name'>Full Name</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
                   {isEditing ? (
                     <InputRow
                       icon={User}
-                      id='name'
-                      type='text'
+                      id="name"
+                      type="text"
                       value={editedInfo.fullname}
                       onChange={(e) =>
                         setEditedInfo({
@@ -240,13 +241,13 @@ export function UserProfile() {
                 </div>
 
                 {/* Email Field */}
-                <div className='space-y-2'>
-                  <Label htmlFor='email'>Email Address</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
                   {isEditing ? (
                     <InputRow
                       icon={Mail}
-                      id='email'
-                      type='email'
+                      id="email"
+                      type="email"
                       value={editedInfo.email}
                       onChange={(e) =>
                         setEditedInfo({ ...editedInfo, email: e.target.value })
@@ -258,13 +259,13 @@ export function UserProfile() {
                 </div>
 
                 {/* Phone Field */}
-                <div className='space-y-2'>
-                  <Label htmlFor='phone'>Phone Number</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
                   {isEditing ? (
                     <InputRow
                       icon={Phone}
-                      id='phone'
-                      type='tel'
+                      id="phone"
+                      type="tel"
                       value={editedInfo.phone}
                       onChange={(e) =>
                         setEditedInfo({ ...editedInfo, phone: e.target.value })
@@ -276,13 +277,13 @@ export function UserProfile() {
                 </div>
 
                 {/* Address Field */}
-                <div className='space-y-2'>
-                  <Label htmlFor='address'>Delivery Address</Label>
-                  <div className='flex items-center justify-between'>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Delivery Address</Label>
+                  <div className="flex items-center justify-between">
                     <InfoRow icon={MapPin} value={address} />
                     <div>
                       <Button
-                        variant='outline'
+                        variant="outline"
                         onClick={() => navigate('/addresses')}
                       >
                         Manage Addresses
@@ -293,15 +294,15 @@ export function UserProfile() {
 
                 {/* Action Buttons */}
                 {isEditing && (
-                  <div className='flex gap-3 pt-4'>
+                  <div className="flex gap-3 pt-4">
                     <Button
                       onClick={handleSave}
-                      className='bg-green-600 hover:bg-green-700'
+                      className="bg-green-600 hover:bg-green-700"
                     >
-                      <Save className='mr-2 w-4 h-4' />
+                      <Save className="mr-2 w-4 h-4" />
                       Save Changes
                     </Button>
-                    <Button variant='outline' onClick={handleCancel}>
+                    <Button variant="outline" onClick={handleCancel}>
                       Cancel
                     </Button>
                   </div>
@@ -309,52 +310,6 @@ export function UserProfile() {
               </div>
             </CardContent>
           </Card>
-          {/* Favorite Farms Section */}
-          {favoriteFarms.length > 0 && (
-            <Card className='mb-6'>
-              <CardHeader>
-                <CardTitle>Favorite Farms</CardTitle>
-                <CardDescription>Your favorite farms</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  {favoriteFarms.map((f) => {
-                    const farm = f.farm;
-                    return (
-                      <div
-                        key={f.id || farm?.id}
-                        className='flex items-center gap-4 p-4 border rounded'
-                      >
-                        {farm?.bannerUrl ? (
-                          <img
-                            src={farm.bannerUrl}
-                            alt={farm.farmName}
-                            className='w-20 h-20 object-cover rounded'
-                          />
-                        ) : (
-                          <div className='w-20 h-20 bg-gray-100 rounded' />
-                        )}
-                        <div className='flex-1'>
-                          <div className='flex items-center justify-between'>
-                            <h4 className='font-semibold'>{farm?.farmName}</h4>
-                            <Button
-                              variant='ghost'
-                              onClick={() => navigate(`/farm/${farm?.id}`)}
-                            >
-                              View
-                            </Button>
-                          </div>
-                          <p className='text-sm text-muted-foreground'>
-                            {farm?.area}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Order History Section */}
           <OrderHistory
@@ -369,6 +324,7 @@ export function UserProfile() {
           />
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

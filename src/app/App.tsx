@@ -27,7 +27,7 @@ import { TraceabilityView } from '../features/customer/TraceabilityViewPage/Inde
 import { FarmDetail } from '../features/customer/FarmDetail/Index';
 import { NotificationPage } from '../features/customer/NotificationPage/Index';
 import { FeedbackPage } from '../features/customer/FeedbackPage/Index';
-import { Header } from '../features/customer/components/Index';
+import { Header } from '../features/customer/components';
 import { ErrorPage } from '../components/ErrorPage';
 import type { CartItem } from '../features/customer/CartPage/types';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';

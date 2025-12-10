@@ -57,6 +57,7 @@ export const API = {
   },
   productBatch: {
     list: `${BASE_URL}/product-batches`,
+    getSelling: `${BASE_URL}/product-batches/selling`,
     add: `${BASE_URL}/product-batches`,
     get: (batchId: string) => `${BASE_URL}/product-batches/${batchId}`,
     bySeason: (seasonId: string) =>

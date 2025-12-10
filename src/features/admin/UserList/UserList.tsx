@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { Eye, Search } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Badge } from "../../../components/ui/badge";
+import { useEffect, useState } from 'react';
+import { Eye, Search } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Badge } from '../../../components/ui/badge';
 import {
   Table,
   TableBody,
@@ -10,17 +10,30 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Pagination } from "../../../components/Pagination";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { getUserList } from "./api";
-import type { User } from "./types";
+} from '../../../components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../../../components/ui/card';
+import { Pagination } from '../../../components/Pagination';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { getUserList } from './api';
+import type { User } from './types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../components/ui/select';
 
 export function UserList() {
   const [users, setUsers] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const navigate = useNavigate();
@@ -32,11 +45,15 @@ export function UserList() {
   const filteredUsers = users
     .filter(
       (user) =>
-        user.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.phone.toLowerCase().includes(searchQuery.toLowerCase())
+        (user.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.phone.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        (roleFilter === 'all' || user.account?.role === roleFilter)
     )
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
   // Pagination logic
   const totalItems = filteredUsers.length;
@@ -52,6 +69,16 @@ export function UserList() {
     setItemsPerPage(items);
     setCurrentPage(1); // Reset to first page when changing items per page
   };
+
+  const handleRoleFilterChange = (value: string) => {
+    setRoleFilter(value);
+    setCurrentPage(1); // Reset to first page when changing filter
+  };
+
+  // Get unique roles from users
+  const uniqueRoles = Array.from(
+    new Set(users.map((user) => user.account?.role).filter(Boolean))
+  ).sort();
 
   // const getStatusColor = (status: User["status"]) => {
   //   switch (status) {
@@ -74,9 +101,9 @@ export function UserList() {
           toast.error(`Get User List failed: ${response.message}`);
         }
       } catch (error) {
-        console.error("Unexpected error:", error);
+        console.error('Unexpected error:', error);
       }
-    }
+    };
     getUsers();
   }, []);
   return (
@@ -89,14 +116,29 @@ export function UserList() {
               Manage and monitor all registered users
             </p>
           </div>
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex gap-4 items-center">
+            <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                {uniqueRoles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -131,7 +173,9 @@ export function UserList() {
                       {user.phone}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{user.account?.role || "N/A"}</Badge>
+                      <Badge variant="secondary">
+                        {user.account?.role || 'N/A'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(user.createdAt).toLocaleString()}

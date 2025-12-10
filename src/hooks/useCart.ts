@@ -18,6 +18,13 @@ export function useCart() {
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
+      // Check if user is logged in
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error("Please login to use our website");
+        return false;
+      }
+
       // Fetch current cart to get cartId
       const cartResponse = await getCartItems();
       if (!cartResponse.success || !cartResponse.data) {

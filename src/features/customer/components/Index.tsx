@@ -12,6 +12,7 @@ import { NavigationButton } from './Header/components/NavigationButton';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getCartItems } from '../CartPage/api';
+export { Footer } from './Footer/Footer';
 
 interface HeaderProps {
   notificationCount: number;

@@ -7,6 +7,7 @@ import { ArrowLeft, Building2, MapPin, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { getCartItems } from "../CartPage/api";
+import { Footer } from "../components";
 import {
   getAddresses,
   getShippingFee,
@@ -589,6 +590,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

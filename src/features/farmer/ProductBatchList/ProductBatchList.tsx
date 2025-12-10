@@ -44,6 +44,8 @@ export function ProductBatchList() {
   const navigate = useNavigate();
   const [batches, setBatches] = useState<ProductBatch[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [productNameFilter, setProductNameFilter] =
+    useState<string>('all-products');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,14 +71,28 @@ export function ProductBatchList() {
     }
   };
 
-  const filteredBatches = batches.filter(
-    (batch) =>
+  const uniqueProductNames = Array.from(
+    new Set(
+      batches
+        .map((batch) => batch.season?.product?.productName)
+        .filter((name): name is string => !!name)
+    )
+  ).sort();
+
+  const filteredBatches = batches.filter((batch) => {
+    const matchesSearch =
       batch.batchCode.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
       batch.units.toLowerCase().includes(searchQuery.toLowerCase()) ||
       batch.season?.product?.productName
         ?.toLowerCase()
-        .includes(searchQuery.toLowerCase())
-  );
+        .includes(searchQuery.toLowerCase());
+
+    const matchesProductFilter =
+      productNameFilter === 'all-products' ||
+      batch.season?.product?.productName === productNameFilter;
+
+    return matchesSearch && matchesProductFilter;
+  });
 
   const totalItems = filteredBatches.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -155,8 +171,8 @@ export function ProductBatchList() {
       </div>
 
       <Card className="p-6">
-        {/* Search */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Search and Filter */}
+        <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -169,6 +185,26 @@ export function ProductBatchList() {
               className="pl-9"
             />
           </div>
+
+          <Select
+            value={productNameFilter}
+            onValueChange={(value) => {
+              setProductNameFilter(value);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Filter by product name" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all-products">All Products</SelectItem>
+              {uniqueProductNames.map((productName) => (
+                <SelectItem key={productName} value={productName}>
+                  {productName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Results Info */}
@@ -210,7 +246,6 @@ export function ProductBatchList() {
                     <TableHead>Product</TableHead>
                     <TableHead>Total Yield</TableHead>
                     <TableHead>Available Qty</TableHead>
-                    <TableHead>Unit</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Harvest Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -238,7 +273,6 @@ export function ProductBatchList() {
                           {batch.availableQuantity}
                         </Badge>
                       </TableCell>
-                      <TableCell>{batch.units}</TableCell>
                       <TableCell>
                         {Number(batch.price).toLocaleString('vi-VN')}₫
                       </TableCell>
@@ -274,7 +308,7 @@ export function ProductBatchList() {
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                           >
                             <Eye className="h-4 w-4 mr-2" />
-                            View
+                            Process
                           </Button>
                         </div>
                       </TableCell>

@@ -4,6 +4,7 @@ import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { toast } from 'sonner';
 import { getOrderDetail, updateOrderStatus } from './api';
+import { Footer } from '../components';
 import { ArrowLeft, MapPin, Truck, CheckCircle } from 'lucide-react';
 
 interface ShippingAddress {
@@ -444,6 +445,7 @@ export function OrderDetailPage() {
           Back to Orders
         </Button>
       </div>
+      <Footer />
     </div>
   );
 }

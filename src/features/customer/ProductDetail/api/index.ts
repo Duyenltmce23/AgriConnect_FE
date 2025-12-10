@@ -23,13 +23,21 @@ export async function getProductBatchDetails(
 }
 
 function transformBatchToDetail(batch: ProductBatchData): ProductDetail {
+  const defaultImage = "https://images.unsplash.com/photo-1565032156168-0a22e5b8374f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwxfHx8fDE3NTk5NTE4OTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
+  
+  // Handle both string[] and object[] with imageUrl property
+  const imageUrls = batch.imageUrls?.map(img => 
+    typeof img === 'string' ? img : (img as any)?.imageUrl
+  ) || [defaultImage];
+
   return {
     id: batch.id,
     name: batch.batchCode.value,
     price: batch.price,
     unit: batch.units,
     category: batch.season?.product?.productAttribute || "Product",
-    image: batch.imageUrls?.[0] || "https://images.unsplash.com/photo-1565032156168-0a22e5b8374f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwxfHx8fDE3NTk5NTE4OTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    image: imageUrls[0] || defaultImage,
+    images: imageUrls.length > 0 ? imageUrls : [defaultImage],
     farm: batch.season?.farm?.farmName || "Unknown Farm",
     farmId: batch.season?.farm?.id || "",
     farmLocation: batch.season?.farm?.farmDesc || "Unknown Location",

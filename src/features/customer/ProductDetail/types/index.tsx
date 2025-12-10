@@ -58,6 +58,12 @@ interface Season {
     productBatches: ProductBatchData[];
 }
 
+interface ImageUrl {
+    imageUrl: string;
+    batchId: string;
+    id: string;
+}
+
 interface ProductBatchData {
     batchCode: BatchCode;
     totalYield: number;
@@ -68,7 +74,7 @@ interface ProductBatchData {
     harvestDate: string;
     seasonId: string;
     season: Season;
-    imageUrls: string[];
+    imageUrls: (string | ImageUrl)[];
     verificationQr: string;
     createdAt: string;
     updatedAt: string;
@@ -82,6 +88,7 @@ interface ProductDetail {
     unit: string;
     category: string;
     image: string;
+    images?: string[];
     farm: string;
     farmId: string;
     farmLocation: string;
@@ -119,5 +126,6 @@ export type {
     Season,
     Product,
     Farm,
-    BatchCode
+    BatchCode,
+    ImageUrl
 };

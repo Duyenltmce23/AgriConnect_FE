@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
+import { Pagination } from '../../../components/Pagination';
 import { getFarms, type FarmItem } from './api';
 import { Badge } from '../../../components/ui/badge';
 import { toast } from 'sonner';
+import { Footer } from '../components';
 
 export function FarmsPage() {
   const [loading, setLoading] = useState(false);
@@ -16,6 +18,8 @@ export function FarmsPage() {
   const [sortBy, setSortBy] = useState<'nameAsc' | 'nameDesc' | 'newest'>(
     'newest'
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
     fetchFarms();
@@ -50,7 +54,7 @@ export function FarmsPage() {
   };
 
   // Front-end filtering and sorting
-  const visibleFarms = useMemo(() => {
+  const filteredFarms = useMemo(() => {
     let list = [...farms];
     if (areaFilter) {
       list = list.filter((f) =>
@@ -78,8 +82,24 @@ export function FarmsPage() {
     return list;
   }, [farms, areaFilter, sortBy]);
 
+  // Pagination logic
+  const totalFarms = filteredFarms.length;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const visibleFarms = filteredFarms.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
   return (
-    <div className='container mx-auto px-4 py-8'>
+    <div>
+      <div className='container mx-auto px-4 py-8'>
       <div className='flex items-center justify-between mb-6 gap-4'>
         <h1 className='text-2xl font-semibold'>Farms</h1>
         <div className='flex items-center gap-2 w-full max-w-xl'>
@@ -124,53 +144,66 @@ export function FarmsPage() {
       </Card>
 
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-        {loading && <p>Loading farms...</p>}
-        {!loading && visibleFarms.length === 0 && (
-          <p className='text-gray-500'>No farms found</p>
-        )}
-        {!loading &&
-          visibleFarms.map((farm) => (
-            <Card
-              key={farm.id}
-              className='p-0 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow'
-              onClick={() => handleOpenFarm(farm.id)}
-            >
-              <div className='relative w-full h-44 hover:scale-105 transition-transform'>
-                {farm.bannerUrl ? (
-                  <img
-                    src={farm.bannerUrl}
-                    alt={farm.farmName}
-                    className='w-full object-cover hover:scale-105 transition-transform'
-                    style={{
-                      maxHeight: '30vh',
-                    }}
-                  />
-                ) : (
-                  <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
-                    No image
-                  </div>
-                )}
+         {loading && <p>Loading farms...</p>}
+         {!loading && visibleFarms.length === 0 && (
+           <p className='text-gray-500'>No farms found</p>
+         )}
+         {!loading &&
+           visibleFarms.map((farm) => (
+             <Card
+               key={farm.id}
+               className='p-0 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow'
+               onClick={() => handleOpenFarm(farm.id)}
+             >
+               <div className='relative w-full h-44 hover:scale-105 transition-transform'>
+                 {farm.bannerUrl ? (
+                   <img
+                     src={farm.bannerUrl}
+                     alt={farm.farmName}
+                     className='w-full object-cover hover:scale-105 transition-transform'
+                     style={{
+                       maxHeight: '30vh',
+                     }}
+                   />
+                 ) : (
+                   <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
+                     No image
+                   </div>
+                 )}
 
-                {farm.isConfirmAsMall && (
-                  <div className='absolute top-3 left-3'>
-                    <Badge variant='destructive'>Mall</Badge>
-                  </div>
-                )}
-              </div>
+                 {farm.isConfirmAsMall && (
+                   <div className='absolute top-3 left-3'>
+                     <Badge variant='destructive'>Mall</Badge>
+                   </div>
+                 )}
+               </div>
 
-              <div className='p-4'>
-                <h3 className='font-semibold mb-1 text-lg'>{farm.farmName}</h3>
-                <p className='text-sm text-gray-600 mb-3'>{farm.farmDesc}</p>
-                <div className='flex items-center justify-between text-sm text-gray-600'>
-                  <div>Area: {farm.area || 'N/A'}</div>
-                  <div>{farm.phone || ''}</div>
-                </div>
-              </div>
-            </Card>
-          ))}
-      </div>
-    </div>
-  );
+               <div className='p-4'>
+                 <h3 className='font-semibold mb-1 text-lg'>{farm.farmName}</h3>
+                 <p className='text-sm text-gray-600 mb-3'>{farm.farmDesc}</p>
+                 <div className='flex items-center justify-between text-sm text-gray-600'>
+                   <div>Area: {farm.area || 'N/A'}</div>
+                   <div>{farm.phone || ''}</div>
+                 </div>
+               </div>
+             </Card>
+           ))}
+       </div>
+
+       {/* Pagination */}
+       <div className='mt-8'>
+         <Pagination
+           currentPage={currentPage}
+           totalItems={totalFarms}
+           itemsPerPage={itemsPerPage}
+           onPageChange={handlePageChange}
+           onItemsPerPageChange={handleItemsPerPageChange}
+         />
+       </div>
+       </div>
+       <Footer />
+       </div>
+       );
 }
 
 export default FarmsPage;

@@ -2,9 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search, Check } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../../components/ui/input';
+import { Pagination } from '../../../components/Pagination';
 import { ProductGrid } from './components/ProductGrid';
+import { ProductFilter } from './components/ProductFilter';
 import { getProductBatches } from './api/productBatch';
 import { API } from '../../../api';
+import { Footer } from '../components';
 import type { ProductBatch } from './types';
 
 interface ProductPageProps {
@@ -19,6 +22,10 @@ export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
     const fetchProductBatches = async () => {
@@ -27,6 +34,13 @@ export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
         if (response.success) {
           if (response.data) {
             setProductBatches(response.data);
+            // Initialize price range
+            const prices = response.data.map((batch) => batch.price);
+            if (prices.length > 0) {
+              const minPrice = Math.min(...prices);
+              const maxPrice = Math.max(...prices);
+              setPriceRange([minPrice, maxPrice]);
+            }
           }
         } else {
           console.error(`Failed to fetch product batches: ${response.message}`);
@@ -58,6 +72,68 @@ export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
     } else {
       setSearchParams({});
     }
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Filtered products
+  const filteredProducts = useMemo(() => {
+    return productBatches.filter((batch) => {
+      const batchCodeValue =
+        typeof batch.batchCode === 'string'
+          ? batch.batchCode
+          : batch.batchCode.value;
+
+      const selectedCategory = categories.find(
+        (cat) => cat.id === selectedCategoryId
+      );
+      const matchesCategory = selectedCategoryId
+        ? batch.category.toLowerCase() ===
+          selectedCategory?.categoryName?.toLowerCase()
+        : true;
+      const matchesSearch = searchQuery
+        ? batchCodeValue
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          batch.product
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+        : true;
+      const matchesProduct =
+        selectedProducts.length > 0
+          ? selectedProducts.includes(batch.product)
+          : true;
+      const matchesPrice =
+        batch.price >= priceRange[0] && batch.price <= priceRange[1];
+
+      return (
+        matchesCategory &&
+        matchesSearch &&
+        matchesProduct &&
+        matchesPrice
+      );
+    });
+  }, [
+    productBatches,
+    selectedCategoryId,
+    searchQuery,
+    categories,
+    selectedProducts,
+    priceRange,
+  ]);
+
+  // Pagination logic
+  const totalProducts = filteredProducts.length;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1); // Reset to first page when changing items per page
   };
 
   return (
@@ -135,35 +211,61 @@ export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
           </div>
         </div>
 
-        {/* Products Grid */}
-        <ProductGrid
-          filteredProducts={useMemo(() => {
-            return productBatches.filter((batch) => {
-              const batchCodeValue =
-                typeof batch.batchCode === 'string'
-                  ? batch.batchCode
-                  : batch.batchCode.value;
+        {/* Main Content with Filters */}
+        <div className="flex gap-6">
+          {/* Sidebar Filters */}
+          <ProductFilter
+            productBatches={productBatches}
+            selectedProducts={selectedProducts}
+            priceRange={priceRange}
+            onProductChange={setSelectedProducts}
+            onPriceChange={setPriceRange}
+            onResetFilters={() => {
+              setSelectedProducts([]);
+              const prices = productBatches.map((batch) => batch.price);
+              if (prices.length > 0) {
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                setPriceRange([minPrice, maxPrice]);
+              }
+              setCurrentPage(1);
+            }}
+          />
 
-              const matchesCategory = selectedCategoryId
-                ? batch.season === selectedCategoryId
-                : true;
-              const matchesSearch = searchQuery
-                ? batchCodeValue
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()) ||
-                  batch.product.toLowerCase().includes(searchQuery.toLowerCase())
-                : true;
-              return matchesCategory && matchesSearch;
-            });
-          }, [productBatches, selectedCategoryId, searchQuery])}
-          allProducts={productBatches}
-          onNavigateToProductDetails={onNavigateToProductDetails}
-          resetSearchAndFilter={() => {
-            setSearchQuery('');
-            setSelectedCategoryId(null);
-          }}
-        />
+          {/* Products Grid */}
+          <ProductGrid
+            filteredProducts={paginatedProducts}
+            allProducts={productBatches}
+            onNavigateToProductDetails={onNavigateToProductDetails}
+            resetSearchAndFilter={() => {
+              setSearchQuery('');
+              setSelectedCategoryId(null);
+              setSelectedProducts([]);
+              const prices = productBatches.map((batch) => batch.price);
+              if (prices.length > 0) {
+                const minPrice = Math.min(...prices);
+                const maxPrice = Math.max(...prices);
+                setPriceRange([minPrice, maxPrice]);
+              }
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+
+        {/* Pagination */}
+        {totalProducts > 0 && (
+          <div className="mt-8">
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalProducts}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
+          </div>
+        )}
       </div>
+      <Footer />
     </div>
   );
 }

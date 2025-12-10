@@ -4,6 +4,7 @@ import { Features } from "./components/Features";
 import { FeaturedFarms } from "./components/FeaturedFarms";
 import { CategorySection } from "./components/CategorySection";
 import { fetchFarms } from "./api";
+import { Footer } from "../components";
 import type { Farm } from "../../../types";
 
 interface HomePageProps {
@@ -162,46 +163,7 @@ export function HomePage({
         onNavigateToProductDetails={onNavigateToProductDetails}
       /> */}
 
-      {/* Footer */}
-      <footer className="bg-green-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="mb-4">AgriConnect</h3>
-              <p className="text-green-200">
-                Your trusted source for organic fruits, vegetables, and leafy greens.
-              </p>
-            </div>
-            <div>
-              <h4 className="mb-4">Shop</h4>
-              <ul className="space-y-2 text-green-200">
-                <li><a href="#fruits" className="hover:text-white transition-colors">Fruits</a></li>
-                <li><a href="#vegetables" className="hover:text-white transition-colors">Vegetables</a></li>
-                <li><a href="#leafy-greens" className="hover:text-white transition-colors">Leafy Greens</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-4">Company</h4>
-              <ul className="space-y-2 text-green-200">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-4">Support</h4>
-              <ul className="space-y-2 text-green-200">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Shipping Info</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Returns</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-green-800 text-center text-green-200">
-            <p>&copy; 2025 AgriConnect. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

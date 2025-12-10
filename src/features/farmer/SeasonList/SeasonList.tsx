@@ -40,6 +40,7 @@ export function SeasonList() {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -59,8 +60,9 @@ export function SeasonList() {
 
   const filteredSeasons = seasons.filter(
     (season) =>
-      season.seasonName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      season.seasonDesc.toLowerCase().includes(searchQuery.toLowerCase())
+      (season.seasonName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        season.seasonDesc.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (statusFilter === '' || season.status === statusFilter)
   );
 
   const totalItems = filteredSeasons.length;
@@ -190,8 +192,8 @@ export function SeasonList() {
       </div>
 
       <Card className="p-6">
-        {/* Search */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Search and Filter */}
+        <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -204,6 +206,21 @@ export function SeasonList() {
               className="pl-9"
             />
           </div>
+          <Select value={statusFilter} onValueChange={(value) => {
+            setStatusFilter(value === 'all' ? '' : value);
+            setCurrentPage(1);
+          }}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="Upcoming">Upcoming</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Results Info */}

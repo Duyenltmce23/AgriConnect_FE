@@ -6,6 +6,7 @@ import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { CertificateViewer } from '../../../components/CertificateViewer';
 import { getFarmDetails } from './api';
+import { Footer } from '../components';
 import type { FarmData } from './types';
 import { addFavoriteFarm, getMyFavoriteFarms } from '../FavoriteFarms/api';
 import { toast } from 'sonner';
@@ -260,6 +261,7 @@ export function FarmDetail() {
           )}
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }

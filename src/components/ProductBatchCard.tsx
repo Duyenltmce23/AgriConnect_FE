@@ -1,9 +1,9 @@
-import { ShoppingCart, Heart, Leaf, Calendar, Droplet } from "lucide-react";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { useCart } from "../hooks/useCart";
-import type { ProductBatch } from "../features/customer/ProductPage/types";
+import { ShoppingCart, Heart, Leaf, Calendar, Droplet } from 'lucide-react';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { useCart } from '../hooks/useCart';
+import type { ProductBatch } from '../features/customer/ProductPage/types';
 
 interface ProductBatchCardProps extends ProductBatch {
   onNavigateToProductDetails: (productId: string) => void;
@@ -14,6 +14,7 @@ export function ProductBatchCard({
   batchCode,
   product,
   season,
+  category,
   farm,
   plantingDate,
   harvestDate,
@@ -31,7 +32,7 @@ export function ProductBatchCard({
   };
 
   const defaultImage =
-    "https://images.unsplash.com/photo-1565032156168-0a22e5b8374f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwxfHx8fDE3NTk5NTE4OTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
+    'https://cms.groupeditors.com/img/ghnw20150817-112916-561.jpg?w=&scale=both&quality=100';
   const imageUrl =
     imageUrls && imageUrls.length > 0 && imageUrls[0]
       ? imageUrls[0]
@@ -39,14 +40,15 @@ export function ProductBatchCard({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return date.toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
-  const batchCodeValue = typeof batchCode === "string" ? batchCode : batchCode.value;
+  const batchCodeValue =
+    typeof batchCode === 'string' ? batchCode : batchCode.value;
   const isOutOfStock = avaibleQuantity === 0;
 
   return (
@@ -98,6 +100,13 @@ export function ProductBatchCard({
 
           {/* Season & Dates */}
           <div className="space-y-2 text-xs bg-slate-50 p-2.5 rounded-md">
+            {category && (
+              <div className="flex items-center gap-2">
+                <Badge className="bg-purple-100 text-purple-800 text-xs font-medium">
+                  {category}
+                </Badge>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-muted-foreground">
               <Leaf className="h-3 w-3 flex-shrink-0" />
               <span className="font-medium">Season:</span>
@@ -106,13 +115,17 @@ export function ProductBatchCard({
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-3 w-3 flex-shrink-0" />
               <span className="font-medium">Planted:</span>
-              <span className="text-foreground">{formatDate(plantingDate)}</span>
+              <span className="text-foreground">
+                {formatDate(plantingDate)}
+              </span>
             </div>
             {harvestDate && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Droplet className="h-3 w-3 flex-shrink-0" />
                 <span className="font-medium">Harvest:</span>
-                <span className="text-foreground">{formatDate(harvestDate)}</span>
+                <span className="text-foreground">
+                  {formatDate(harvestDate)}
+                </span>
               </div>
             )}
           </div>
@@ -129,7 +142,9 @@ export function ProductBatchCard({
               <div
                 className="bg-green-600 h-1.5 rounded-full transition-all"
                 style={{
-                  width: `${totalYield > 0 ? (avaibleQuantity / totalYield) * 100 : 0}%`,
+                  width: `${
+                    totalYield > 0 ? (avaibleQuantity / totalYield) * 100 : 0
+                  }%`,
                 }}
               ></div>
             </div>
@@ -153,7 +168,7 @@ export function ProductBatchCard({
               disabled={isOutOfStock}
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
-              {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+              {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
             </Button>
           </div>
         </div>

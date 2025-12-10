@@ -3,6 +3,7 @@ import { Card } from "../../../components/ui/card";
 import { Pagination } from "../../../components/Pagination";
 import { toast } from "sonner";
 import { getOrderList } from "./api";
+import { Footer } from "../components";
 import type { Order } from "./types";
 import { Order as OrderComponent } from "./components/Order";
 
@@ -124,6 +125,7 @@ export function OrdersPage({ onNavigateToFeedback }: OrdersPageProps) {
           />
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

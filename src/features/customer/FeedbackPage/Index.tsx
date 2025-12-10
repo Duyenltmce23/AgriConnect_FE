@@ -5,6 +5,7 @@ import { Card } from "../../../components/ui/card";
 import { Textarea } from "../../../components/ui/textarea";
 import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
+import { Footer } from "../components";
 
 interface FeedbackPageProps {
     onBack: () => void;
@@ -162,6 +163,7 @@ export function FeedbackPage({
                     </Button>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }

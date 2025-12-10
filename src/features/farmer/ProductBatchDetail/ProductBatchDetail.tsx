@@ -1,16 +1,22 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Leaf, ShoppingCart } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
-import { toast } from "sonner";
-import type { ProductBatchDetail } from "./types";
-import { getProductBatchDetail } from "./api";
-import { AddEventDialog } from "./components/AddEventDialog";
-import { EventList } from "./components/EventList";
-import { HarvestDialog } from "./components/HarvestDialog";
-import { SellDialog } from "./components/SellDialog";
+import { useEffect, useState } from 'react';
+import {
+  ArrowLeft,
+  Plus,
+  Leaf,
+  ShoppingCart,
+} from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
+import { toast } from 'sonner';
+import type { ProductBatchDetail } from './types';
+import { getProductBatchDetail } from './api';
+import { AddEventDialog } from './components/AddEventDialog';
+import { EventList } from './components/EventList';
+import { HarvestDialog } from './components/HarvestDialog';
+import { SellDialog } from './components/SellDialog';
+import { ImageCarousel } from './components/ImageCarousel';
 
 export function ProductBatchDetail() {
   const { batchId } = useParams<{ batchId: string }>();
@@ -35,13 +41,13 @@ export function ProductBatchDetail() {
         if (response.success && response.data) {
           setBatch(response.data);
         } else {
-          setError(response.message || "Failed to load batch details");
-          toast.error(response.message || "Failed to load batch details");
+          setError(response.message || 'Failed to load batch details');
+          toast.error(response.message || 'Failed to load batch details');
         }
       } catch (err) {
-        console.error("Error fetching batch details:", err);
-        setError("Error loading batch details");
-        toast.error("Error loading batch details");
+        console.error('Error fetching batch details:', err);
+        setError('Error loading batch details');
+        toast.error('Error loading batch details');
       } finally {
         setIsLoading(false);
       }
@@ -92,16 +98,13 @@ export function ProductBatchDetail() {
           Back
         </Button>
         <div className="flex items-center justify-center h-64">
-          <p className="text-red-600">{error || "Batch not found"}</p>
+          <p className="text-red-600">{error || 'Batch not found'}</p>
         </div>
       </div>
     );
   }
 
   const isInStock = batch.availableQuantity > 0;
-  const imageUrl =
-    batch.imageUrls?.[0] ||
-    "https://images.unsplash.com/photo-1565032156168-0a22e5b8374f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwxfHx8fDE3NTk5NTE4OTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral";
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -139,29 +142,23 @@ export function ProductBatchDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Image & Basic Info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Product Image */}
-          <Card className="overflow-hidden">
-            <div className="relative">
-              <img
-                src={imageUrl}
-                alt={batch.batchCode.value}
-                className="w-full h-96 object-cover"
-              />
-              {!isInStock && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <span className="text-white font-semibold text-xl">
-                    Out of Stock
-                  </span>
-                </div>
-              )}
-            </div>
+          {/* Product Image Carousel */}
+          <Card className="overflow-hidden p-4">
+            <ImageCarousel
+              images={batch.imageUrls || []}
+              batchCode={batch.batchCode.value}
+              isOutOfStock={!isInStock}
+            />
           </Card>
 
           {/* Batch Information */}
           <Card className="p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {batch.batchCode.value}
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              {batch.season?.product?.productName}
             </h2>
+            <p className="text-lg text-muted-foreground mb-4">
+              Product batch: {batch.batchCode.value}
+            </p>
 
             <div className="grid grid-cols-2 gap-6">
               <div>
@@ -182,8 +179,8 @@ export function ProductBatchDetail() {
                     variant="secondary"
                     className={
                       isInStock
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
                     }
                   >
                     {batch.availableQuantity} {batch.units}
@@ -194,14 +191,7 @@ export function ProductBatchDetail() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Price</p>
                 <p className="text-xl font-bold text-green-600">
-                  {Number(batch.price).toLocaleString("vi-VN")}₫
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Unit</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {batch.units}
+                  {Number(batch.price).toLocaleString('vi-VN')}₫
                 </p>
               </div>
 
@@ -210,7 +200,7 @@ export function ProductBatchDetail() {
                   Planting Date
                 </p>
                 <p className="text-gray-900">
-                  {new Date(batch.plantingDate).toLocaleDateString("vi-VN")}
+                  {new Date(batch.plantingDate).toLocaleDateString('vi-VN')}
                 </p>
               </div>
 
@@ -219,24 +209,8 @@ export function ProductBatchDetail() {
                   Harvest Date
                 </p>
                 <p className="text-gray-900">
-                  {new Date(batch.harvestDate).toLocaleDateString("vi-VN")}
+                  {new Date(batch.harvestDate).toLocaleDateString('vi-VN')}
                 </p>
-              </div>
-            </div>
-
-            {/* Created/Updated Info */}
-            <div className="mt-6 pt-6 border-t space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Created:</span>
-                <span>
-                  {new Date(batch.createdAt).toLocaleDateString("vi-VN")}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Last Updated:</span>
-                <span>
-                  {new Date(batch.updatedAt).toLocaleDateString("vi-VN")}
-                </span>
               </div>
             </div>
           </Card>
@@ -261,11 +235,11 @@ export function ProductBatchDetail() {
                   <Badge
                     variant="secondary"
                     className={
-                      batch.season.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : batch.season.status === "Pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
+                      batch.season.status === 'Active'
+                        ? 'bg-green-100 text-green-800'
+                        : batch.season.status === 'Pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-800'
                     }
                   >
                     {batch.season.status}
@@ -276,7 +250,7 @@ export function ProductBatchDetail() {
                   <p className="text-sm text-muted-foreground">Start Date</p>
                   <p>
                     {new Date(batch.season.startDate).toLocaleDateString(
-                      "vi-VN"
+                      'vi-VN'
                     )}
                   </p>
                 </div>
@@ -284,14 +258,14 @@ export function ProductBatchDetail() {
                 <div>
                   <p className="text-sm text-muted-foreground">End Date</p>
                   <p>
-                    {new Date(batch.season.endDate).toLocaleDateString("vi-VN")}
+                    {new Date(batch.season.endDate).toLocaleDateString('vi-VN')}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-muted-foreground">Description</p>
                   <p className="text-sm text-gray-700">
-                    {batch.season.seasonDesc || "No description"}
+                    {batch.season.seasonDesc || 'No description'}
                   </p>
                 </div>
               </div>
@@ -326,13 +300,13 @@ export function ProductBatchDetail() {
                     variant="secondary"
                     className={
                       !batch.season.farm.isDelete && !batch.season.farm.isBanned
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
                     }
                   >
                     {!batch.season.farm.isDelete && !batch.season.farm.isBanned
-                      ? "Active"
-                      : "Inactive"}
+                      ? 'Active'
+                      : 'Inactive'}
                   </Badge>
                 </div>
               </div>
@@ -356,34 +330,26 @@ export function ProductBatchDetail() {
                 <div>
                   <p className="text-sm text-muted-foreground">Attribute</p>
                   <p className="text-sm">
-                    {batch.season.product.productAttribute || "No attribute"}
+                    {batch.season.product.productAttribute || 'No attribute'}
                   </p>
                 </div>
 
                 <div>
                   <p className="text-sm text-muted-foreground">Description</p>
                   <p className="text-sm text-gray-700">
-                    {batch.season.product.productDesc || "No description"}
+                    {batch.season.product.productDesc || 'No description'}
                   </p>
                 </div>
               </div>
             </Card>
           )}
-
-          {/* Batch ID */}
-          <Card className="p-6 bg-gray-50">
-            <p className="text-sm text-muted-foreground mb-2">Batch ID</p>
-            <p className="font-mono text-xs text-gray-900 break-all">
-              {batch.id}
-            </p>
-          </Card>
         </div>
       </div>
 
       {/* Care Events Section */}
       <div className="mt-8">
         <EventList
-          batchId={batchId || ""}
+          batchId={batchId || ''}
           refreshTrigger={eventRefreshTrigger}
         />
       </div>
@@ -392,7 +358,7 @@ export function ProductBatchDetail() {
       <AddEventDialog
         open={isAddEventDialogOpen}
         onOpenChange={setIsAddEventDialogOpen}
-        batchId={batchId || ""}
+        batchId={batchId || ''}
         onEventAdded={handleEventAdded}
       />
 

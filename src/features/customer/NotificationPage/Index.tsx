@@ -3,6 +3,7 @@ import { Bell, Package, Truck, CheckCircle, AlertCircle, Trash2 } from "lucide-r
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
+import { Footer } from "../components";
 import {
     Select,
     SelectContent,
@@ -236,6 +237,7 @@ export function NotificationPage() {
                     </Card>
                 )}
             </div>
+            <Footer />
         </div>
     );
 }

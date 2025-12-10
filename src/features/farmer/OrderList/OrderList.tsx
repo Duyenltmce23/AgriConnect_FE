@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
-import { Search, Eye } from "lucide-react";
-import axios from "axios";
-import { Input } from "../../../components/ui/input";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
+import { useState, useEffect } from 'react';
+import { Search, Eye, X } from 'lucide-react';
+import axios from 'axios';
+import { Input } from '../../../components/ui/input';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -19,9 +19,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
-import { useNavigate } from "react-router-dom";
-import { API } from "../../../api";
+} from '../../../components/ui/table';
+import { useNavigate } from 'react-router-dom';
+import { API } from '../../../api';
 
 interface OrderItem {
   orderId: string;
@@ -51,7 +51,7 @@ interface Order {
   totalPrice: number;
   orderDate: string;
   shippingFee: number;
-  orderStatus: "Pending" | "Processing" | "Shipping" | "Delivered" | "Canceled";
+  orderStatus: 'Pending' | 'Processing' | 'Shipping' | 'Delivered' | 'Canceled';
   orderType: string;
   paymentStatus: string;
   paymentMethod: string;
@@ -61,7 +61,7 @@ interface Order {
 }
 
 export function OrderList() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -69,14 +69,17 @@ export function OrderList() {
   const [error, setError] = useState<string | null>(null);
   const [farmId, setFarmId] = useState<string | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const navigate = useNavigate();
 
   const statusOptions = [
-    "Pending",
-    "Processing",
-    "Shipping",
-    "Delivered",
-    "Canceled",
+    'Pending',
+    'Processing',
+    'Shipping',
+    'Delivered',
+    'Canceled',
   ];
 
   useEffect(() => {
@@ -86,9 +89,9 @@ export function OrderList() {
         setError(null);
 
         // Get current farm
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem('token');
         if (!token) {
-          throw new Error("No authentication token found");
+          throw new Error('No authentication token found');
         }
 
         const farmApi = axios.create({
@@ -100,13 +103,13 @@ export function OrderList() {
         const farmResponse = await farmApi.get(API.farm.me);
         if (!farmResponse.data.success || !farmResponse.data.data) {
           throw new Error(
-            farmResponse.data.message || "Failed to get farm info"
+            farmResponse.data.message || 'Failed to get farm info'
           );
         }
 
         const currentFarmId = farmResponse.data.data.id;
         setFarmId(currentFarmId);
-        console.log("Farm ID:", currentFarmId);
+        console.log('Farm ID:', currentFarmId);
 
         // Fetch orders for this farm
         const ordersApi = axios.create({
@@ -116,10 +119,10 @@ export function OrderList() {
         });
 
         const ordersUrl = API.order.getByFarm(currentFarmId);
-        console.log("Fetching orders from:", ordersUrl);
+        console.log('Fetching orders from:', ordersUrl);
 
         const ordersResponse = await ordersApi.get(ordersUrl);
-        console.log("Orders response:", ordersResponse.data);
+        console.log('Orders response:', ordersResponse.data);
 
         if (
           ordersResponse.data.success &&
@@ -128,14 +131,14 @@ export function OrderList() {
           setOrders(ordersResponse.data.data);
         } else {
           throw new Error(
-            ordersResponse.data.message || "Invalid response format"
+            ordersResponse.data.message || 'Invalid response format'
           );
         }
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "An error occurred";
+          err instanceof Error ? err.message : 'An error occurred';
         setError(errorMessage);
-        console.error("Failed to fetch orders:", errorMessage);
+        console.error('Failed to fetch orders:', errorMessage);
         setOrders([]);
       } finally {
         setLoading(false);
@@ -152,9 +155,9 @@ export function OrderList() {
   async function handleStatusChange(orderId: string, newStatus: string) {
     try {
       setUpdatingOrderId(orderId);
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error("No authentication token found");
+        throw new Error('No authentication token found');
       }
 
       const statusApi = axios.create({
@@ -172,30 +175,42 @@ export function OrderList() {
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order.id === orderId
-              ? { ...order, orderStatus: newStatus as Order["orderStatus"] }
+              ? { ...order, orderStatus: newStatus as Order['orderStatus'] }
               : order
           )
         );
       } else {
         throw new Error(
-          response.data.message || "Failed to update order status"
+          response.data.message || 'Failed to update order status'
         );
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "An error occurred";
+        err instanceof Error ? err.message : 'An error occurred';
       alert(`Error updating status: ${errorMessage}`);
-      console.error("Failed to update order status:", errorMessage);
+      console.error('Failed to update order status:', errorMessage);
     } finally {
       setUpdatingOrderId(null);
     }
   }
 
-  const filteredOrders = orders.filter(
-    (order) =>
+  const filteredOrders = orders.filter((order) => {
+    // Search filter
+    const matchesSearch =
       order.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customer.fullname.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      order.customer.fullname.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Status filter
+    const matchesStatus =
+      filterStatus === 'all' || order.orderStatus === filterStatus;
+
+    // Date range filter
+    const orderDate = new Date(order.orderDate);
+    const matchesStartDate = !startDate || orderDate >= new Date(startDate);
+    const matchesEndDate = !endDate || orderDate <= new Date(endDate);
+
+    return matchesSearch && matchesStatus && matchesStartDate && matchesEndDate;
+  });
 
   const totalItems = filteredOrders.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -203,20 +218,20 @@ export function OrderList() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentOrders = filteredOrders.slice(startIndex, endIndex);
 
-  const getStatusColor = (status: Order["orderStatus"]) => {
+  const getStatusColor = (status: Order['orderStatus']) => {
     switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Processing":
-        return "bg-blue-100 text-blue-800";
-      case "Shipping":
-        return "bg-purple-100 text-purple-800";
-      case "Delivered":
-        return "bg-green-100 text-green-800";
-      case "Canceled":
-        return "bg-red-100 text-red-800";
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'Shipping':
+        return 'bg-purple-100 text-purple-800';
+      case 'Delivered':
+        return 'bg-green-100 text-green-800';
+      case 'Canceled':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -234,8 +249,9 @@ export function OrderList() {
           </div>
         )}
 
-        {/* Search and Controls */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Search and Filters */}
+        <div className="space-y-4 mb-6">
+          {/* Search Bar */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -248,6 +264,89 @@ export function OrderList() {
               className="pl-9"
               disabled={loading}
             />
+          </div>
+
+          {/* Filter Row */}
+          <div className="flex flex-wrap gap-4 items-end">
+            {/* Status Filter */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-2 text-gray-700">
+                Status
+              </label>
+              <Select
+                value={filterStatus}
+                onValueChange={(value) => {
+                  setFilterStatus(value);
+                  setCurrentPage(1);
+                }}
+                disabled={loading}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Start Date Filter */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-2 text-gray-700">
+                Start Date
+              </label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                disabled={loading}
+                className="w-40"
+              />
+            </div>
+
+            {/* End Date Filter */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-2 text-gray-700">
+                End Date
+              </label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                disabled={loading}
+                className="w-40"
+              />
+            </div>
+
+            {/* Clear Filters Button */}
+            {(filterStatus !== 'all' || startDate || endDate) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFilterStatus('all');
+                  setStartDate('');
+                  setEndDate('');
+                  setCurrentPage(1);
+                }}
+                disabled={loading}
+                className="flex items-center gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+              </Button>
+            )}
           </div>
         </div>
 
@@ -377,11 +476,11 @@ export function OrderList() {
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <Button
                 key={page}
-                variant={currentPage === page ? "default" : "outline"}
+                variant={currentPage === page ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setCurrentPage(page)}
                 className={
-                  currentPage === page ? "bg-green-600 hover:bg-green-700" : ""
+                  currentPage === page ? 'bg-green-600 hover:bg-green-700' : ''
                 }
               >
                 {page}

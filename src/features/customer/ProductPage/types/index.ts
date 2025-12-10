@@ -16,6 +16,7 @@ interface ProductBatch {
   batchCode: string | { value: string };
   product: string;
   season: string;
+  category: string;
   farm: string;
   createdAt: string;
   plantingDate: string;

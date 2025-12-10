@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { ProductDetailInfo } from "./components/ProductDetailInfo";
 import Reviews from "./components/Reviews";
 import VerificationQRCode from "./components/VerificationQRCode";
 import { getProductDetails } from "../ProductDetail/api";
 import { useCart } from "../../../hooks/useCart";
+import { Footer } from "../components";
 import type { ProductDetail, CareEvent } from "./types";
 import { ProductBasicInfo } from "./components/ProductBasicInfo";
 
@@ -52,6 +53,7 @@ export function ProductDetail({
   onNavigateToFarmDetail,
 }: ProductDetailProps) {
   const { productId: urlProductId } = useParams<{ productId: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<ProductDetail>(defaultProduct);
   const [quantity, setQuantity] = useState(1);
   const { handleAddToCart: addToCart, isLoading } = useCart();
@@ -87,10 +89,10 @@ export function ProductDetail({
     <div>
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
-        <Button variant="ghost" onClick={onNavigateToProducts} className="mb-6">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Products
-        </Button>
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Products
+          </Button>
         <ProductBasicInfo
           product={product}
           quantity={quantity}
@@ -113,6 +115,7 @@ export function ProductDetail({
           <Reviews farmId={product.farmId} productId={product.id} />
         )}
       </div>
+      <Footer />
     </div>
   );
 }

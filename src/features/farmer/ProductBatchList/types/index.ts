@@ -4,6 +4,12 @@ interface BatchCode {
   value: string;
 }
 
+interface ImageUrl {
+  imageUrl: string;
+  batchId: string;
+  id: string;
+}
+
 interface ProductBatch {
   batchCode: BatchCode;
   totalYield: number;
@@ -13,7 +19,7 @@ interface ProductBatch {
   plantingDate: string;
   harvestDate: string;
   seasonId: string;
-  imageUrls: string[];
+  imageUrls: ImageUrl[];
   createdAt: string;
   updatedAt: string;
   id: string;
@@ -96,4 +102,5 @@ export type {
   SeasonWithRelations,
   ProductBatchDetail,
   BatchCode,
+  ImageUrl,
 };
