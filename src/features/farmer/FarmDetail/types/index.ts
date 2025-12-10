@@ -53,6 +53,7 @@ interface FarmDetail {
   farmDesc: string;
   batchCodePrefix: string;
   bannerUrl: string;
+  certificateUrl?: string;
   phone: string;
   area: string;
   isDelete: boolean;

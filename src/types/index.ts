@@ -5,4 +5,23 @@ interface ApiResponse<T = undefined> {
   message: string;
   data?: T;
 }
-export type { UserRole, ApiResponse };
+
+interface Farm {
+  id: string;
+  farmName: string;
+  farmDesc: string;
+  batchCodePrefix: string;
+  bannerUrl: string;
+  phone: string;
+  area: string;
+  isDelete: boolean;
+  isBanned: boolean;
+  isValidForSelling: boolean;
+  isConfirmAsMall: boolean;
+  createdAt: string;
+  createdBy: string;
+  farmerId: string;
+  addressId: string;
+}
+
+export type { UserRole, ApiResponse, Farm };

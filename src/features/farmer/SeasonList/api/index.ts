@@ -11,7 +11,7 @@ export async function getSeasons(): Promise<SeasonListResponse> {
         Authorization: `Bearer ${token}`,
       },
     });
-    const url = API.season.list;
+    const url = API.season.byFarm(localStorage.getItem("farmId") || "");
     const response = await api.get<SeasonListResponse>(url);
     const responseData = response.data;
     return responseData;

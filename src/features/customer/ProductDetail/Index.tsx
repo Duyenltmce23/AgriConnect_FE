@@ -33,6 +33,7 @@ const defaultProduct: ProductDetail = {
   rating: 0,
   reviews: 0,
   description: "",
+  verificationQr: "",
   features: [],
   nutritionFacts: {
     servingSize: "",
@@ -53,7 +54,6 @@ export function ProductDetail({
   const { productId: urlProductId } = useParams<{ productId: string }>();
   const [product, setProduct] = useState<ProductDetail>(defaultProduct);
   const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(false);
   const { handleAddToCart: addToCart, isLoading } = useCart();
 
   // Use URL parameter if available, otherwise use prop
@@ -83,10 +83,6 @@ export function ProductDetail({
     await addToCart(product.id, quantity);
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-  };
-
   return (
     <div>
       <div className="container mx-auto px-4 py-8">
@@ -103,15 +99,13 @@ export function ProductDetail({
           onNavigateToTraceability={onNavigateToTraceability}
           onNavigateToError={onNavigateToError}
           onNavigateToFarmDetail={onNavigateToFarmDetail}
-          isFavorite={isFavorite}
-          toggleFavorite={toggleFavorite}
           isLoading={isLoading}
         />
         <ProductDetailInfo product={product} />
 
         {/* Verification QR Code - easy to scan */}
         {product.farmId && product.id && (
-          <VerificationQRCode farmId={product.farmId} productId={product.id} />
+          <VerificationQRCode farmId={product.farmId} productId={product.id} qrSrc={product?.verificationQr || "http://res.cloudinary.com/dos0qfmda/image/upload/v1765360909/agriconnect/batch-qrcodes/591fc461-ac94-4a12-cea3-08de37d31561.png"} />
         )}
 
         {/* Reviews component (client-side mock storage) */}

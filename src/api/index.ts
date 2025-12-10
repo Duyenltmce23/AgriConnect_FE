@@ -29,8 +29,8 @@ export const API = {
     delete: (farmId: string) => `${BASE_URL}/farms/${farmId}`,
     me: `${BASE_URL}/farms/me`,
     addCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificate`,
-    updateCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificates}`,
-    deleteCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificate}`,
+    updateCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificates`,
+    deleteCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificate`,
     ban: (farmId: string) => `${BASE_URL}/farms/${farmId}/toggle-banned`,
   },
   product: {

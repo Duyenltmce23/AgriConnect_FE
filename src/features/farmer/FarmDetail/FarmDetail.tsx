@@ -4,8 +4,9 @@ import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { toast } from 'sonner';
+import { CertificateViewer } from '../../../components/CertificateViewer';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getFarmDetail, updateFarm, deleteFarm } from './api';
+import { getFarmDetail, updateFarm, deleteFarm, uploadCertificate, updateCertificate, deleteCertificate } from './api';
 import type { FarmDetail as FarmDetailType } from './types';
 import {
   Dialog,
@@ -46,6 +47,8 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
   const [bannerFile, setBannerFile] = useState<File | undefined>();
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [showAddFarmDialog, setShowAddFarmDialog] = useState(false);
+  const [isCertificateLoading, setIsCertificateLoading] = useState(false);
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
 
   // Location states
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -99,6 +102,11 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
             ward: response.data.address?.ward || '',
             detail: response.data.address?.detail || '',
           });
+          // Load certificate from API response
+          if (response.data.certificateUrl) {
+            setCertificateUrl(response.data.certificateUrl);
+            setCertificatePreview(response.data.certificateUrl);
+          }
           console.log(response.data);
         } else {
           toast.error('Failed to fetch farm details');
@@ -243,17 +251,22 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
     setBannerPreview(null);
   };
 
-  // Certificate handling (client-side)
-  const { getCertificate, uploadCertificate, removeCertificate } =
+  // Certificate handling (client-side fallback)
+  const { getCertificate, uploadCertificate: uploadCertificateLocal, removeCertificate } =
     useCertificate();
   const [certificatePreview, setCertificatePreview] = useState<string | null>(
     null
   );
   useEffect(() => {
     if (!farmId) return;
-    const cert = getCertificate(farmId);
-    setCertificatePreview(cert ? cert.imageBase64 : null);
-  }, [farmId]);
+    // Check for server-side certificate URL first, then fall back to local storage
+    if (certificateUrl) {
+      setCertificatePreview(certificateUrl);
+    } else {
+      const cert = getCertificate(farmId);
+      setCertificatePreview(cert ? cert.imageBase64 : null);
+    }
+  }, [farmId, certificateUrl, getCertificate]);
 
   const handleUpdateSubmit = async () => {
     if (
@@ -444,67 +457,128 @@ export function FarmDetail({ farmId: propFarmId }: FarmDetailProps) {
         </Card>
 
         {/* Certificate Section */}
-        <Card className='p-6'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-            Certificate
-          </h3>
-          {certificatePreview ? (
-            <div className='space-y-3'>
-              <img
-                src={certificatePreview}
-                alt='certificate'
-                className='w-64 h-auto object-contain rounded shadow'
-              />
-              <div className='flex gap-2'>
-                <Button
-                  variant='outline'
-                  onClick={() => {
-                    // remove
-                    if (!farmId) return;
-                    removeCertificate(farmId);
-                    setCertificatePreview(null);
-                    toast.success('Certificate removed');
-                  }}
-                >
-                  Remove
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className='space-y-3'>
-              <p className='text-sm text-muted-foreground'>
-                No certificate uploaded yet.
-              </p>
-              <input
-                id='certificate'
-                type='file'
-                accept='image/*'
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file || !farmId) return;
-                  if (!file.type.startsWith('image/')) {
-                    toast.error('Please select an image file');
-                    return;
-                  }
-                  try {
-                    const accountId =
-                      localStorage.getItem('accountId') || undefined;
-                    const entry = await uploadCertificate(
-                      farmId,
-                      file,
-                      accountId
-                    );
-                    setCertificatePreview(entry.imageBase64);
-                    toast.success('Certificate uploaded (client-side)');
-                  } catch (err) {
-                    console.error(err);
-                    toast.error('Failed to upload certificate');
-                  }
-                }}
-              />
-            </div>
-          )}
-        </Card>
+         <Card className='p-6'>
+           <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+             Certificate
+           </h3>
+           {certificatePreview ? (
+             <div className='space-y-3'>
+               <img
+                 src={certificatePreview}
+                 alt='certificate'
+                 className='w-64 h-auto object-contain rounded shadow'
+               />
+               <div className='flex flex-wrap gap-2'>
+                 <CertificateViewer imageUrl={certificatePreview} altText='Farm Certificate' />
+                 <Button
+                   variant='outline'
+                   onClick={() => {
+                     document.getElementById('certificate-update')?.click();
+                   }}
+                   disabled={isCertificateLoading}
+                   className='gap-2'
+                 >
+                   Update
+                 </Button>
+                 <Button
+                   variant='outline'
+                   onClick={async () => {
+                     if (!farmId) return;
+                     setIsCertificateLoading(true);
+                     try {
+                       const response = await deleteCertificate(farmId);
+                       if (response.success) {
+                         setCertificateUrl(null);
+                         setCertificatePreview(null);
+                         removeCertificate(farmId);
+                         toast.success('Certificate deleted successfully');
+                       } else {
+                         toast.error(response.message || 'Failed to delete certificate');
+                       }
+                     } catch (err) {
+                       console.error(err);
+                       toast.error('Failed to delete certificate');
+                     } finally {
+                       setIsCertificateLoading(false);
+                     }
+                   }}
+                   disabled={isCertificateLoading}
+                   className='gap-2 text-red-600 hover:text-red-700'
+                 >
+                   Delete
+                 </Button>
+               </div>
+               <input
+                 id='certificate-update'
+                 type='file'
+                 accept='image/*'
+                 disabled={isCertificateLoading}
+                 onChange={async (e) => {
+                   const file = e.target.files?.[0];
+                   if (!file || !farmId) return;
+                   if (!file.type.startsWith('image/')) {
+                     toast.error('Please select an image file');
+                     return;
+                   }
+                   setIsCertificateLoading(true);
+                   try {
+                     const response = await updateCertificate(farmId, file);
+                     if (response.success && response.data) {
+                       setCertificateUrl(response.data);
+                       setCertificatePreview(response.data);
+                       toast.success('Certificate updated successfully');
+                     } else {
+                       toast.error(response.message || 'Failed to update certificate');
+                     }
+                   } catch (err) {
+                     console.error(err);
+                     toast.error('Failed to update certificate');
+                   } finally {
+                     setIsCertificateLoading(false);
+                   }
+                 }}
+                 className='hidden'
+               />
+             </div>
+           ) : (
+             <div className='space-y-3'>
+               <p className='text-sm text-muted-foreground'>
+                 No certificate uploaded yet.
+               </p>
+               <input
+                 id='certificate'
+                 type='file'
+                 accept='image/*'
+                 disabled={isCertificateLoading}
+                 onChange={async (e) => {
+                   const file = e.target.files?.[0];
+                   if (!file || !farmId) return;
+                   if (!file.type.startsWith('image/')) {
+                     toast.error('Please select an image file');
+                     return;
+                   }
+                   setIsCertificateLoading(true);
+                   try {
+                     // Upload to server
+                     const response = await uploadCertificate(farmId, file);
+                     if (response.success && response.data) {
+                       setCertificateUrl(response.data);
+                       setCertificatePreview(response.data);
+                       toast.success('Certificate uploaded successfully');
+                     } else {
+                       toast.error(response.message || 'Failed to upload certificate');
+                     }
+                   } catch (err) {
+                     console.error(err);
+                     toast.error('Failed to upload certificate');
+                   } finally {
+                     setIsCertificateLoading(false);
+                   }
+                 }}
+               />
+             </div>
+           )}
+         </Card>
 
         {/* Location Information */}
         {farmDetail.address && (

@@ -1,6 +1,10 @@
+import { useState, useEffect } from "react";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
+import { FeaturedFarms } from "./components/FeaturedFarms";
 import { CategorySection } from "./components/CategorySection";
+import { fetchFarms } from "./api";
+import type { Farm } from "../../../types";
 
 interface HomePageProps {
   onNavigateToProducts: () => void;
@@ -11,6 +15,19 @@ export function HomePage({
   onNavigateToProducts,
   onNavigateToProductDetails,
 }: HomePageProps) {
+  const [featuredFarms, setFeaturedFarms] = useState<Farm[]>([]);
+  const [isLoadingFarms, setIsLoadingFarms] = useState(true);
+
+  useEffect(() => {
+    const loadFarms = async () => {
+      setIsLoadingFarms(true);
+      const farms = await fetchFarms();
+      setFeaturedFarms(farms);
+      setIsLoadingFarms(false);
+    };
+    loadFarms();
+  }, []);
+
   const fruitsProducts = [
     {
       id: "1",
@@ -114,7 +131,12 @@ export function HomePage({
       <Hero onNavigateToProducts={onNavigateToProducts} />
       <Features />
 
-      <CategorySection
+      {/* Featured Farms Section */}
+      {!isLoadingFarms && featuredFarms.length > 0 && (
+        <FeaturedFarms farms={featuredFarms} />
+      )}
+
+      {/* <CategorySection
         id="fruits"
         title="Fresh Fruits"
         description="Handpicked ripe fruits bursting with natural sweetness and vitamins"
@@ -138,7 +160,7 @@ export function HomePage({
         description="Nutrient-rich greens for your healthy lifestyle"
         products={leafyGreensProducts}
         onNavigateToProductDetails={onNavigateToProductDetails}
-      />
+      /> */}
 
       {/* Footer */}
       <footer className="bg-green-900 text-white py-12">

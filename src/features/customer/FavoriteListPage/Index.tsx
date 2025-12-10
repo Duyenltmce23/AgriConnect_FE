@@ -1,186 +1,229 @@
-import { useState } from "react";
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, MapPin, Trash2, Loader } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { toast } from "sonner";
+import { getMyFavoriteFarms, removeFavoriteFarm } from "../FavoriteFarms/api";
+import { useNavigate } from "react-router-dom";
 
-interface FavoriteListPageProps {
-    onNavigateToProducts: () => void;
-    onNavigateToProductDetails: (productId: string) => void;
-    onAddToCart: (product: { id: string; name: string; price: number; unit: string; image: string }) => void;
+interface FavoriteFarmsPageProps {
+  onNavigateToProducts?: () => void;
 }
 
-interface FavoriteProduct {
+interface FavoriteFarm {
+  farm: {
     id: string;
-    name: string;
-    price: number;
-    unit: string;
-    category: string;
-    image: string;
-    inStock: boolean;
+    farmName: string;
+    farmDesc: string;
+    bannerUrl?: string;
+    area?: string;
+    phone?: string;
+    isConfirmAsMall?: boolean;
+  };
 }
 
 export function FavoriteListPage({
-    onNavigateToProducts,
-    onNavigateToProductDetails,
-    onAddToCart,
-}: FavoriteListPageProps) {
-    const [favorites, setFavorites] = useState<FavoriteProduct[]>([
-        {
-            id: "1",
-            name: "Organic Tomatoes",
-            price: 12.99,
-            unit: "kg",
-            category: "Vegetables",
-            image: "https://images.unsplash.com/photo-1546470427-227dddc6c7aa?w=400&h=300&fit=crop",
-            inStock: true,
-        },
-        {
-            id: "2",
-            name: "Fresh Spinach",
-            price: 5.99,
-            unit: "bunch",
-            category: "Leafy Greens",
-            image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop",
-            inStock: true,
-        },
-        {
-            id: "3",
-            name: "Green Apples",
-            price: 18.99,
-            unit: "kg",
-            category: "Fruits",
-            image: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400&h=300&fit=crop",
-            inStock: false,
-        },
-        {
-            id: "4",
-            name: "Red Peppers",
-            price: 15.50,
-            unit: "kg",
-            category: "Vegetables",
-            image: "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=300&fit=crop",
-            inStock: true,
-        },
-    ]);
+  onNavigateToProducts,
+}: FavoriteFarmsPageProps) {
+  const navigate = useNavigate();
+  const [favorites, setFavorites] = useState<FavoriteFarm[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRemoving, setIsRemoving] = useState<string | null>(null);
 
-    const handleRemoveFromFavorites = (productId: string) => {
-        setFavorites((prev) => prev.filter((item) => item.id !== productId));
-        toast.success("Removed from favorites");
-    };
-
-    const handleAddToCart = (product: FavoriteProduct) => {
-        if (!product.inStock) {
-            toast.error("Product is out of stock");
-            return;
+  // Load favorite farms on component mount
+  useEffect(() => {
+    const loadFavoriteFarms = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getMyFavoriteFarms();
+        if (Array.isArray(response)) {
+          setFavorites(response);
+        } else if (response?.data && Array.isArray(response.data)) {
+          setFavorites(response.data);
+        } else {
+          setFavorites([]);
         }
-        onAddToCart({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            unit: product.unit,
-            image: product.image,
-        });
+      } catch (error) {
+        console.error("Error loading favorite farms:", error);
+        toast.error("Failed to load favorite farms");
+        setFavorites([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
+    loadFavoriteFarms();
+  }, []);
+
+  const handleRemoveFromFavorites = async (farmId: string) => {
+    try {
+      setIsRemoving(farmId);
+      await removeFavoriteFarm(farmId);
+      setFavorites((prev) => prev.filter((item) => item.farm.id !== farmId));
+      toast.success("Removed from favorites");
+    } catch (error) {
+      console.error("Error removing favorite farm:", error);
+      toast.error("Failed to remove from favorites");
+    } finally {
+      setIsRemoving(null);
+    }
+  };
+
+  const handleViewFarmDetail = (farmId: string) => {
+    navigate(`/farm/${farmId}`);
+  };
+
+  const handleBrowseProducts = () => {
+    if (onNavigateToProducts) {
+      onNavigateToProducts();
+    } else {
+      navigate("/products");
+    }
+  };
+
+  if (isLoading) {
     return (
-        <div>
-            <div className="container mx-auto px-4 py-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-gray-900 mb-2">My Favorites</h1>
-                    <p className="text-muted-foreground">
-                        {favorites.length > 0
-                            ? `You have ${favorites.length} item${favorites.length !== 1 ? "s" : ""} in your favorites`
-                            : "Your favorites list is empty"}
-                    </p>
-                </div>
-
-                {favorites.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {favorites.map((product) => (
-                            <Card key={product.id} className="overflow-hidden group">
-                                <div className="relative">
-                                    <button
-                                        onClick={() => onNavigateToProductDetails(product.id)}
-                                        className="w-full"
-                                    >
-                                        <img
-                                            src={product.image}
-                                            alt={product.name}
-                                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
-                                    </button>
-                                    <button
-                                        onClick={() => handleRemoveFromFavorites(product.id)}
-                                        className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
-                                    >
-                                        <Heart className="h-5 w-5 fill-red-600 text-red-600" />
-                                    </button>
-                                    {!product.inStock && (
-                                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                            <Badge variant="secondary" className="bg-white">
-                                                Out of Stock
-                                            </Badge>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="p-4">
-                                    <Badge className="bg-green-100 text-green-800 mb-2">
-                                        {product.category}
-                                    </Badge>
-                                    <button
-                                        onClick={() => onNavigateToProductDetails(product.id)}
-                                        className="w-full text-left"
-                                    >
-                                        <h3 className="text-gray-900 mb-2 hover:text-green-600 transition-colors">
-                                            {product.name}
-                                        </h3>
-                                    </button>
-                                    <p className="text-green-600 mb-4">
-                                        ${product.price.toFixed(2)}{" "}
-                                        <span className="text-sm text-muted-foreground">/ {product.unit}</span>
-                                    </p>
-
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            className="flex-1 bg-green-600 hover:bg-green-700"
-                                            onClick={() => handleAddToCart(product)}
-                                            disabled={!product.inStock}
-                                        >
-                                            <ShoppingCart className="h-4 w-4 mr-2" />
-                                            Add to Cart
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={() => handleRemoveFromFavorites(product.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4 text-red-600" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                ) : (
-                    <Card className="p-12 text-center">
-                        <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <p className="text-xl mb-2">No favorites yet</p>
-                        <p className="text-muted-foreground mb-6">
-                            Start adding products to your favorites to see them here
-                        </p>
-                        <Button
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={onNavigateToProducts}
-                        >
-                            Browse Products
-                        </Button>
-                    </Card>
-                )}
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader className="h-8 w-8 animate-spin mx-auto mb-3 text-green-600" />
+            <p className="text-muted-foreground">Loading your favorite farms...</p>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Favorite Farms</h1>
+          <p className="text-muted-foreground">
+            {favorites.length > 0
+              ? `You have ${favorites.length} favorite farm${
+                  favorites.length !== 1 ? "s" : ""
+                }`
+              : "Your favorites list is empty"}
+          </p>
+        </div>
+
+        {favorites.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {favorites.map((item) => {
+              const farm = item.farm;
+              return (
+                <Card key={farm.id} className="overflow-hidden group hover:shadow-lg transition-shadow">
+                  {/* Farm Banner */}
+                  <div className="relative h-40 bg-gray-200 overflow-hidden">
+                    {farm.bannerUrl ? (
+                      <img
+                        src={farm.bannerUrl}
+                        alt={farm.farmName}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                        <span className="text-green-600 font-semibold">No Banner</span>
+                      </div>
+                    )}
+                    {farm.isConfirmAsMall && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute top-3 right-3"
+                      >
+                        Mall Farm
+                      </Badge>
+                    )}
+                    <button
+                      onClick={() => handleRemoveFromFavorites(farm.id)}
+                      disabled={isRemoving === farm.id}
+                      className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      {isRemoving === farm.id ? (
+                        <Loader className="h-5 w-5 animate-spin text-red-600" />
+                      ) : (
+                        <Heart className="h-5 w-5 fill-red-600 text-red-600" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Farm Info */}
+                  <div className="p-4">
+                    <button
+                      onClick={() => handleViewFarmDetail(farm.id)}
+                      className="w-full text-left"
+                    >
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-green-600 transition-colors line-clamp-2">
+                        {farm.farmName}
+                      </h3>
+                    </button>
+
+                    {/* Description */}
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {farm.farmDesc || "No description available"}
+                    </p>
+
+                    {/* Location and Area */}
+                    <div className="space-y-2 mb-4 text-sm">
+                      {farm.area && (
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">{farm.area}</span>
+                        </div>
+                      )}
+                      {farm.phone && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">📞</span>
+                          <span className="text-gray-700 font-mono">{farm.phone}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 pt-4 border-t">
+                      <Button
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        onClick={() => handleViewFarmDetail(farm.id)}
+                      >
+                        View Details
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleRemoveFromFavorites(farm.id)}
+                        disabled={isRemoving === farm.id}
+                      >
+                        {isRemoving === farm.id ? (
+                          <Loader className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card className="p-12 text-center">
+            <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-xl font-semibold mb-2">No favorite farms yet</p>
+            <p className="text-muted-foreground mb-6">
+              Start adding farms to your favorites to see them here
+            </p>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleBrowseProducts}
+            >
+              Browse Farms
+            </Button>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
 }

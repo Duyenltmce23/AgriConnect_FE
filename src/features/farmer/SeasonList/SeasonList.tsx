@@ -250,8 +250,18 @@ export function SeasonList() {
             <TableBody>
               {currentSeasons.map((season) => (
                 <TableRow key={season.id}>
-                  <TableCell>{season.seasonName}</TableCell>
-                  <TableCell>{season.seasonDesc}</TableCell>
+                  <TableCell style={{
+                    maxWidth: "200px",
+                    lineClamp: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}>{season.seasonName}</TableCell>
+                  <TableCell style={{
+                    maxWidth: "250px",
+                    lineClamp: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}>{season.seasonDesc}</TableCell>
                   <TableCell>{season.startDate}</TableCell>
                   <TableCell>{season.endDate}</TableCell>
                   <TableCell>
