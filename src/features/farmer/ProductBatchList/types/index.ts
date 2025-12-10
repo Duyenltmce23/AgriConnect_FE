@@ -1,4 +1,4 @@
-import type { ApiResponse } from "../../../../types";
+import type { ApiResponse } from '../../../../types';
 
 interface BatchCode {
   value: string;
@@ -17,6 +17,7 @@ interface ProductBatch {
   createdAt: string;
   updatedAt: string;
   id: string;
+  season?: SeasonWithRelations;
 }
 
 interface ProductBatchCreate {

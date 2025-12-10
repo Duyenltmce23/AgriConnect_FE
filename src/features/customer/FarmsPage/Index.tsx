@@ -135,14 +135,14 @@ export function FarmsPage() {
               className='p-0 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow'
               onClick={() => handleOpenFarm(farm.id)}
             >
-              <div className='relative w-full h-44'>
+              <div className='relative w-full h-44 hover:scale-105 transition-transform'>
                 {farm.bannerUrl ? (
                   <img
                     src={farm.bannerUrl}
                     alt={farm.farmName}
-                    className='w-full object-cover'
+                    className='w-full object-cover hover:scale-105 transition-transform'
                     style={{
-                      maxHeight: '40vh',
+                      maxHeight: '30vh',
                     }}
                   />
                 ) : (

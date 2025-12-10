@@ -92,6 +92,7 @@ interface ProductDetail {
     description: string;
     features: string[];
     nutritionFacts: NutritionFacts;
+    verificationQr: string
 }
 
 interface CareEvent {

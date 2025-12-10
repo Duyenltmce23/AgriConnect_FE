@@ -29,8 +29,8 @@ export const API = {
     delete: (farmId: string) => `${BASE_URL}/farms/${farmId}`,
     me: `${BASE_URL}/farms/me`,
     addCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificate`,
-    updateCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificates}`,
-    deleteCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificate}`,
+    updateCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificates`,
+    deleteCert: (farmId: string) => `${BASE_URL}/farms/${farmId}/certificate`,
     ban: (farmId: string) => `${BASE_URL}/farms/${farmId}/toggle-banned`,
   },
   product: {
@@ -59,9 +59,12 @@ export const API = {
     list: `${BASE_URL}/product-batches`,
     add: `${BASE_URL}/product-batches`,
     get: (batchId: string) => `${BASE_URL}/product-batches/${batchId}`,
-    bySeason: (seasonId: string) => `${BASE_URL}/product-batches/season/${seasonId}`,
-    verifyCareEvents: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/care-events/verify`,
-    harvest: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/harvest`,
+    bySeason: (seasonId: string) =>
+      `${BASE_URL}/product-batches/season/${seasonId}`,
+    verifyCareEvents: (batchId: string) =>
+      `${BASE_URL}/product-batches/${batchId}/care-events/verify`,
+    harvest: (batchId: string) =>
+      `${BASE_URL}/product-batches/${batchId}/harvest`,
     sell: (batchId: string) => `${BASE_URL}/product-batches/${batchId}/sell`,
   },
   cart: {

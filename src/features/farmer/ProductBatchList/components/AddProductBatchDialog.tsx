@@ -55,7 +55,7 @@ export function AddProductBatchDialog({
   // Form fields
   const [selectedSeason, setSelectedSeason] = useState("");
   const [totalYield, setTotalYield] = useState("");
-  const [units, setUnits] = useState("");
+  const [units, setUnits] = useState("kg");
   const [plantingDate, setPlantingDate] = useState("");
 
   // Images
@@ -177,7 +177,7 @@ export function AddProductBatchDialog({
         {
           seasonId: selectedSeason,
           totalYield: totalYieldNum,
-          units: units.trim(),
+          units: "kg",
           plantingDate,
         },
         imageFiles.length > 0 ? imageFiles : undefined
@@ -259,20 +259,6 @@ export function AddProductBatchDialog({
               value={totalYield}
               onChange={(e) => setTotalYield(e.target.value)}
               placeholder="Enter total yield amount"
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Units */}
-          <div className="space-y-2">
-            <Label htmlFor="units" className="text-sm font-medium">
-              Units <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="units"
-              value={units}
-              onChange={(e) => setUnits(e.target.value)}
-              placeholder="e.g., kg, ton, boxes"
               disabled={isLoading}
             />
           </div>

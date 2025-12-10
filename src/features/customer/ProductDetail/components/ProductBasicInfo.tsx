@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Leaf, Shield, ShoppingCart, Star, Truck } from "lucide-react";
+import { Leaf, Shield, ShoppingCart, Star, Truck } from "lucide-react";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
 import { Card } from "../../../../components/ui/card";
@@ -15,8 +15,8 @@ interface ProductBasicInfoProps {
   onNavigateToTraceability: (careEvents: CareEvent[], errorMessage?: string) => void;
   onNavigateToError: () => void;
   onNavigateToFarmDetail?: (farmId: string) => void;
-  isFavorite: boolean;
-  toggleFavorite: () => void;
+  isFavorite?: boolean;
+  toggleFavorite?: () => void;
   isLoading?: boolean;
 }
 export function ProductBasicInfo({
@@ -127,42 +127,34 @@ export function ProductBasicInfo({
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center border rounded-lg">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="px-4"
-            >
-              -
-            </Button>
-            <span className="px-6 py-2 border-x">{quantity}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setQuantity(quantity + 1)}
-              className="px-4"
-            >
-              +
-            </Button>
-          </div>
-          <Button
-            className="flex-1 bg-green-600 hover:bg-green-700"
-            onClick={handleAddToCart}
-            disabled={!product.inStock || isLoading}
-          >
-            <ShoppingCart className="h-5 w-5 mr-2" />
-            {isLoading ? "Adding..." : "Add to Cart"}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleFavorite}
-            className={isFavorite ? "text-red-600" : ""}
-          >
-            <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-          </Button>
-        </div>
+           <div className="flex items-center border rounded-lg">
+             <Button
+               variant="ghost"
+               size="sm"
+               onClick={() => setQuantity(Math.max(1, quantity - 1))}
+               className="px-4"
+             >
+               -
+             </Button>
+             <span className="px-6 py-2 border-x">{quantity}</span>
+             <Button
+               variant="ghost"
+               size="sm"
+               onClick={() => setQuantity(quantity + 1)}
+               className="px-4"
+             >
+               +
+             </Button>
+           </div>
+           <Button
+             className="flex-1 bg-green-600 hover:bg-green-700"
+             onClick={handleAddToCart}
+             disabled={!product.inStock || isLoading}
+           >
+             <ShoppingCart className="h-5 w-5 mr-2" />
+             {isLoading ? "Adding..." : "Add to Cart"}
+           </Button>
+         </div>
 
         <Button
           variant="outline"

@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { Search, Plus, Eye, Calendar } from "lucide-react";
-import { Input } from "../../../components/ui/input";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
+import { useEffect, useState } from 'react';
+import { Search, Plus, Eye, Calendar } from 'lucide-react';
+import { Input } from '../../../components/ui/input';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
+} from '../../../components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -26,21 +26,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../../components/ui/dialog";
-import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { getSeasons, createSeason } from "./api";
-import type { Season } from "./types";
-import type { Product } from "../ProductList/types";
-
+} from '../../../components/ui/dialog';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { getSeasons, createSeason } from './api';
+import type { Season } from './types';
+import type { Product } from '../ProductList/types';
 
 export function SeasonList() {
   const [farm, setFarm] = useState<{ id: string; name: string } | null>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -52,11 +51,11 @@ export function SeasonList() {
   }
 
   // Form states
-  const [seasonName, setSeasonName] = useState("");
-  const [product, setProduct] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [description, setDescription] = useState("");
+  const [seasonName, setSeasonName] = useState('');
+  const [product, setProduct] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [description, setDescription] = useState('');
 
   const filteredSeasons = seasons.filter(
     (season) =>
@@ -72,13 +71,13 @@ export function SeasonList() {
 
   const handleCreateSeason = async () => {
     if (!seasonName || !product || !startDate || !endDate) {
-      toast.error("Please fill in all required fields");
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    const farmId = localStorage.getItem("farmId");
+    const farmId = localStorage.getItem('farmId');
     if (!farmId) {
-      toast.error("Farm ID not found. Please select a farm first.");
+      toast.error('Farm ID not found. Please select a farm first.');
       return;
     }
 
@@ -95,7 +94,7 @@ export function SeasonList() {
 
       const response = await createSeason(payload);
       if (response.success) {
-        toast.success("Season created successfully");
+        toast.success('Season created successfully');
         setShowCreateDialog(false);
         resetForm();
         // Refresh seasons list
@@ -104,36 +103,36 @@ export function SeasonList() {
           setSeasons(seasonsResponse.data);
         }
       } else {
-        toast.error(response.message || "Failed to create season");
+        toast.error(response.message || 'Failed to create season');
       }
     } catch (error) {
-      console.error("Error creating season:", error);
-      toast.error("Error creating season");
+      console.error('Error creating season:', error);
+      toast.error('Error creating season');
     } finally {
       setIsLoading(false);
     }
   };
 
   const resetForm = () => {
-    setSeasonName("");
-    setProduct("");
-    setStartDate("");
-    setEndDate("");
-    setDescription("");
+    setSeasonName('');
+    setProduct('');
+    setStartDate('');
+    setEndDate('');
+    setDescription('');
   };
 
-  const getStatusColor = (status: Season["status"]) => {
+  const getStatusColor = (status: Season['status']) => {
     switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-800";
-      case "Completed":
-        return "bg-gray-100 text-gray-800";
-      case "Upcoming":
-        return "bg-blue-100 text-blue-800";
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
+      case 'Active':
+        return 'bg-green-100 text-green-800';
+      case 'Completed':
+        return 'bg-gray-100 text-gray-800';
+      case 'Upcoming':
+        return 'bg-blue-100 text-blue-800';
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -147,7 +146,7 @@ export function SeasonList() {
           toast.error(`Failed to fetch seasons: ${response.message}`);
         }
       } catch (error) {
-        console.error("Failed to fetch seasons:", error);
+        console.error('Failed to fetch seasons:', error);
       }
     };
     fetchSeasons();
@@ -156,8 +155,8 @@ export function SeasonList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5170/api/products", {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5170/api/products', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -167,7 +166,7 @@ export function SeasonList() {
           setProducts(data.data);
         }
       } catch (error) {
-        console.error("Failed to fetch products:", error);
+        console.error('Failed to fetch products:', error);
       }
     };
     fetchProducts();
@@ -177,9 +176,14 @@ export function SeasonList() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-gray-900">Season Management</h2>
-          <p className="text-muted-foreground">Manage growing seasons and production logs</p>
+          <p className="text-muted-foreground">
+            Manage growing seasons and production logs
+          </p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700" onClick={() => setShowCreateDialog(true)}>
+        <Button
+          className="bg-green-600 hover:bg-green-700"
+          onClick={() => setShowCreateDialog(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Create Season
         </Button>
@@ -246,12 +250,25 @@ export function SeasonList() {
             <TableBody>
               {currentSeasons.map((season) => (
                 <TableRow key={season.id}>
-                  <TableCell>{season.seasonName}</TableCell>
-                  <TableCell>{season.seasonDesc}</TableCell>
+                  <TableCell style={{
+                    maxWidth: "200px",
+                    lineClamp: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}>{season.seasonName}</TableCell>
+                  <TableCell style={{
+                    maxWidth: "250px",
+                    lineClamp: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}>{season.seasonDesc}</TableCell>
                   <TableCell>{season.startDate}</TableCell>
                   <TableCell>{season.endDate}</TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(season.status)} variant="secondary">
+                    <Badge
+                      className={getStatusColor(season.status)}
+                      variant="secondary"
+                    >
                       {season.status}
                     </Badge>
                   </TableCell>
@@ -285,10 +302,12 @@ export function SeasonList() {
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <Button
                 key={page}
-                variant={currentPage === page ? "default" : "outline"}
+                variant={currentPage === page ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setCurrentPage(page)}
-                className={currentPage === page ? "bg-green-600 hover:bg-green-700" : ""}
+                className={
+                  currentPage === page ? 'bg-green-600 hover:bg-green-700' : ''
+                }
               >
                 {page}
               </Button>
@@ -310,7 +329,9 @@ export function SeasonList() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create New Season</DialogTitle>
-            <DialogDescription>Start a new growing season for your farm</DialogDescription>
+            <DialogDescription>
+              Start a new growing season for your farm
+            </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2 col-span-2">
@@ -363,11 +384,22 @@ export function SeasonList() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }} disabled={isLoading}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreateDialog(false);
+                resetForm();
+              }}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={handleCreateSeason} disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create Season"}
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleCreateSeason}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating...' : 'Create Season'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -5,20 +5,21 @@ import { Button } from "../../../../components/ui/button";
 interface VerificationQRCodeProps {
   farmId: string;
   productId: string;
+  qrSrc: string;
 }
 
-export const VerificationQRCode: React.FC<VerificationQRCodeProps> = ({ farmId, productId }) => {
+export const VerificationQRCode: React.FC<VerificationQRCodeProps> = ({ farmId, productId, qrSrc }) => {
   // Construct a verification URL. Replace domain when real API is available.
-  const verificationUrl = `${window.location.origin}/verify?farmId=${encodeURIComponent(farmId)}&productId=${encodeURIComponent(productId)}`;
-  const qrSrc = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(verificationUrl)}`;
+  // const verificationUrl = `${window.location.origin}/verify?farmId=${encodeURIComponent(farmId)}&productId=${encodeURIComponent(productId)}`;
+  // const qrSrc = `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(verificationUrl)}`;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(verificationUrl);
+      await navigator.clipboard.writeText(qrSrc);
       alert("Verification link copied to clipboard");
     } catch (e) {
       console.error(e);
-      alert("Failed to copy link.\n" + verificationUrl);
+      alert("Failed to copy link.\n" + qrSrc);
     }
   };
 
@@ -31,7 +32,7 @@ export const VerificationQRCode: React.FC<VerificationQRCodeProps> = ({ farmId, 
           <img src={qrSrc} alt="Verification QR" className="w-48 h-48 object-contain" />
         </div>
         <div className="flex-1">
-          <p className="text-sm break-all mb-3">Link: <span className="text-green-600">{verificationUrl}</span></p>
+          <p className="text-sm break-all mb-3">Link: <span className="text-green-600">{qrSrc}</span></p>
           <div className="flex gap-2">
             <Button onClick={handleCopy}>Copy Link</Button>
             <Button variant="outline" onClick={() => window.open(qrSrc, "_blank")}>Open QR Image</Button>

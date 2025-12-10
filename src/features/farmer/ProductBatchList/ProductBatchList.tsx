@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
-import { Search, Eye, Package, Plus, Leaf, ShoppingCart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Input } from "../../../components/ui/input";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { Badge } from "../../../components/ui/badge";
+import { useEffect, useState } from 'react';
+import { Search, Eye, Package, Plus, Leaf, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Input } from '../../../components/ui/input';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { Badge } from '../../../components/ui/badge';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
+} from '../../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -19,15 +19,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../components/ui/table";
-import { toast } from "sonner";
-import type { ProductBatch } from "./types";
-import { getFarmerProductBatches } from "./api";
-import { AddProductBatchDialog } from "./components/AddProductBatchDialog";
-import { HarvestDialog } from "./components/HarvestDialog";
-import { SellDialog } from "./components/SellDialog";
-import axios from "axios";
-import { API } from "../../../api";
+} from '../../../components/ui/table';
+import { toast } from 'sonner';
+import type { ProductBatch } from './types';
+import { getFarmerProductBatches } from './api';
+import { AddProductBatchDialog } from './components/AddProductBatchDialog';
+import { HarvestDialog } from './components/HarvestDialog';
+import { SellDialog } from './components/SellDialog';
+import axios from 'axios';
+import { API } from '../../../api';
 
 interface Farm {
   id: string;
@@ -43,7 +43,7 @@ interface FarmResponse {
 export function ProductBatchList() {
   const navigate = useNavigate();
   const [batches, setBatches] = useState<ProductBatch[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,16 +55,16 @@ export function ProductBatchList() {
   // Get farmId by fetching farmer's current farm
   const fetchFarmId = async (): Promise<string | null> => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       const response = await axios.get<FarmResponse>(API.farm.me, { headers });
       if (response.data.success && response.data.data?.id) {
         return response.data.data.id;
       }
       return null;
     } catch (error) {
-      console.error("Error fetching farm:", error);
+      console.error('Error fetching farm:', error);
       return null;
     }
   };
@@ -72,7 +72,10 @@ export function ProductBatchList() {
   const filteredBatches = batches.filter(
     (batch) =>
       batch.batchCode.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      batch.units.toLowerCase().includes(searchQuery.toLowerCase())
+      batch.units.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      batch.season?.product?.productName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase())
   );
 
   const totalItems = filteredBatches.length;
@@ -99,24 +102,25 @@ export function ProductBatchList() {
     try {
       setIsLoading(true);
       const farmId = await fetchFarmId();
-      
+
       if (!farmId) {
-        toast.error("No farm found. Please create a farm first.");
+        toast.error('No farm found. Please create a farm first.');
         setIsLoading(false);
         return;
       }
 
       const response = await getFarmerProductBatches(farmId);
       if (response.success && response.data) {
+        console.log('Fetched batches with season data:', response.data);
         setBatches(response.data);
       } else {
         toast.error(
-          `Failed to fetch batches: ${response.message || "Unknown error"}`
+          `Failed to fetch batches: ${response.message || 'Unknown error'}`
         );
       }
     } catch (error) {
-      console.error("Error fetching batches:", error);
-      toast.error("Error loading product batches");
+      console.error('Error fetching batches:', error);
+      toast.error('Error loading product batches');
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +207,7 @@ export function ProductBatchList() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Batch Code</TableHead>
+                    <TableHead>Product</TableHead>
                     <TableHead>Total Yield</TableHead>
                     <TableHead>Available Qty</TableHead>
                     <TableHead>Unit</TableHead>
@@ -217,14 +222,17 @@ export function ProductBatchList() {
                       <TableCell className="font-semibold">
                         {batch.batchCode.value}
                       </TableCell>
+                      <TableCell>
+                        {batch.season?.product?.productName || 'N/A'}
+                      </TableCell>
                       <TableCell>{batch.totalYield}</TableCell>
                       <TableCell>
                         <Badge
                           variant="secondary"
                           className={
                             batch.availableQuantity > 0
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
                           }
                         >
                           {batch.availableQuantity}
@@ -232,11 +240,11 @@ export function ProductBatchList() {
                       </TableCell>
                       <TableCell>{batch.units}</TableCell>
                       <TableCell>
-                        {Number(batch.price).toLocaleString("vi-VN")}₫
+                        {Number(batch.price).toLocaleString('vi-VN')}₫
                       </TableCell>
                       <TableCell>
                         {new Date(batch.harvestDate).toLocaleDateString(
-                          "vi-VN"
+                          'vi-VN'
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -291,13 +299,13 @@ export function ProductBatchList() {
                   (page) => (
                     <Button
                       key={page}
-                      variant={currentPage === page ? "default" : "outline"}
+                      variant={currentPage === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setCurrentPage(page)}
                       className={
                         currentPage === page
-                          ? "bg-green-600 hover:bg-green-700"
-                          : ""
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : ''
                       }
                     >
                       {page}
@@ -321,7 +329,9 @@ export function ProductBatchList() {
           <div className="flex flex-col items-center justify-center py-12">
             <Package className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              {searchQuery ? "No batches match your search" : "No product batches yet"}
+              {searchQuery
+                ? 'No batches match your search'
+                : 'No product batches yet'}
             </p>
           </div>
         )}

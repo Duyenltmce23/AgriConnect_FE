@@ -1,22 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import { Search, Check } from "lucide-react";
-import { Input } from "../../../components/ui/input";
-import { ProductGrid } from "./components/ProductGrid";
-import { getProductBatches } from "./api/productBatch";
-import { API } from "../../../api";
-import type { ProductBatch } from "./types";
+import { useEffect, useMemo, useState } from 'react';
+import { Search, Check } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Input } from '../../../components/ui/input';
+import { ProductGrid } from './components/ProductGrid';
+import { getProductBatches } from './api/productBatch';
+import { API } from '../../../api';
+import type { ProductBatch } from './types';
 
 interface ProductPageProps {
   onNavigateToProductDetails: (productId: string) => void;
 }
 
-export function ProductPage({
-  onNavigateToProductDetails,
-}: ProductPageProps) {
+export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [productBatches, setProductBatches] = useState<ProductBatch[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchProductBatches = async () => {
@@ -30,7 +32,7 @@ export function ProductPage({
           console.error(`Failed to fetch product batches: ${response.message}`);
         }
       } catch (error) {
-        console.error("Error fetching product batches:", error);
+        console.error('Error fetching product batches:', error);
       }
     };
     fetchProductBatches();
@@ -43,11 +45,20 @@ export function ProductPage({
           setCategories(json.data);
         }
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        console.error('Error fetching categories:', error);
       }
     };
     fetchCategories();
   }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (value.trim()) {
+      setSearchParams({ q: value });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   return (
     <div>
@@ -60,14 +71,14 @@ export function ProductPage({
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-8 flex gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        {/* Search Input */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search products..."
+              placeholder="Search by batch code or product name..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -82,24 +93,42 @@ export function ProductPage({
                 role="button"
                 aria-pressed={selectedCategoryId === cat.id}
                 tabIndex={0}
-                onClick={() => setSelectedCategoryId((prev) => (prev === cat.id ? null : cat.id))}
+                onClick={() =>
+                  setSelectedCategoryId((prev) =>
+                    prev === cat.id ? null : cat.id
+                  )
+                }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") setSelectedCategoryId((prev) => (prev === cat.id ? null : cat.id));
+                  if (e.key === 'Enter' || e.key === ' ')
+                    setSelectedCategoryId((prev) =>
+                      prev === cat.id ? null : cat.id
+                    );
                 }}
                 className={`relative flex-shrink-0 flex items-center justify-center gap-4 p-3 rounded-lg border cursor-pointer transition-all transform ${
-                  selectedCategoryId === cat.id ? "scale-105 shadow-lg border-2 border-primary-600 ring-4 ring-primary/20" : "hover:shadow-md"
+                  selectedCategoryId === cat.id
+                    ? 'scale-105 shadow-lg border-2 border-primary-600 ring-4 ring-primary/20'
+                    : 'hover:shadow-md'
                 }`}
-                style={{ backgroundColor: randomPastel(cat.id), minWidth: '13rem' }}
+                style={{
+                  backgroundColor: randomPastel(cat.id),
+                  minWidth: '13rem',
+                }}
               >
                 {selectedCategoryId === cat.id && (
                   <div className="absolute top-1 right-2 bg-white rounded-full p-1 shadow">
                     <Check className="w-4 h-4 text-green-600" />
                   </div>
                 )}
-                <img src={cat.illustrativeImageUrl} alt={cat.categoryName} className="w-16 h-16 object-cover rounded-md" />
+                <img
+                  src={cat.illustrativeImageUrl}
+                  alt={cat.categoryName}
+                  className="w-16 h-16 object-cover rounded-md"
+                />
                 <div className="flex-1">
                   <div className="font-semibold">{cat.categoryName}</div>
-                  <div className="text-xs text-muted-foreground truncate">{cat.categoryDesc}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {cat.categoryDesc}
+                  </div>
                 </div>
               </div>
             ))}
@@ -109,34 +138,28 @@ export function ProductPage({
         {/* Products Grid */}
         <ProductGrid
           filteredProducts={useMemo(() => {
-            const all = productBatches.map((batch) => ({
-              id: batch.id,
-              name: batch.batchCode.value,
-              price: batch.price,
-              unit: batch.units,
-              image: batch.imageUrls[0] || "",
-              category: batch.seasonId,
-            }));
+            return productBatches.filter((batch) => {
+              const batchCodeValue =
+                typeof batch.batchCode === 'string'
+                  ? batch.batchCode
+                  : batch.batchCode.value;
 
-            return all.filter((p) => {
-              const matchesCategory = selectedCategoryId ? p.category === selectedCategoryId : true;
+              const matchesCategory = selectedCategoryId
+                ? batch.season === selectedCategoryId
+                : true;
               const matchesSearch = searchQuery
-                ? p.name.toLowerCase().includes(searchQuery.toLowerCase())
+                ? batchCodeValue
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                  batch.product.toLowerCase().includes(searchQuery.toLowerCase())
                 : true;
               return matchesCategory && matchesSearch;
             });
           }, [productBatches, selectedCategoryId, searchQuery])}
-          allProducts={productBatches.map((batch) => ({
-            id: batch.id,
-            name: batch.batchCode.value,
-            price: batch.price,
-            unit: batch.units,
-            image: batch.imageUrls[0] || "",
-            category: batch.seasonId,
-          }))}
+          allProducts={productBatches}
           onNavigateToProductDetails={onNavigateToProductDetails}
           resetSearchAndFilter={() => {
-            setSearchQuery("");
+            setSearchQuery('');
             setSelectedCategoryId(null);
           }}
         />
@@ -144,7 +167,6 @@ export function ProductPage({
     </div>
   );
 }
-
 
 function randomPastel(seed: string) {
   // deterministic-ish pastel HSL based on string hash

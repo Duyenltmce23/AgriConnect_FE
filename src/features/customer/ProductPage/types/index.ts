@@ -12,20 +12,19 @@ interface Product {
 type GetProductListResponse = ApiResponse<Product[]>;
 
 interface ProductBatch {
-  batchCode: {
-    value: string;
-  };
-  totalYield: number;
-  availableQuantity: number;
-  units: string;
-  price: number;
-  plantingDate: string;
-  harvestDate: string;
-  seasonId: string;
-  imageUrls: string[];
-  createdAt: string;
-  updatedAt: string;
   id: string;
+  batchCode: string | { value: string };
+  product: string;
+  season: string;
+  farm: string;
+  createdAt: string;
+  plantingDate: string;
+  harvestDate?: string;
+  totalYield: number;
+  avaibleQuantity: number;
+  price: number;
+  units: string;
+  imageUrls: string[];
 }
 
 type GetProductBatchResponse = ApiResponse<ProductBatch[]>;

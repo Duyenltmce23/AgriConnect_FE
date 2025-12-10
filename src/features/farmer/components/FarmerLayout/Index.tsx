@@ -1,7 +1,7 @@
 import { Calendar, Leaf, LogOut, Package, ShoppingBag, User, Warehouse, BarChart3 } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FarmRequiredDialog } from "../FarmRequiredDialog";
 import { useFarmCheck } from "../../../../hooks/useFarmCheck";
 
@@ -12,6 +12,8 @@ export function FarmerLayout() {
     const navigate = useNavigate();
     const { hasFarmId } = useFarmCheck();
     const [showFarmRequiredDialog, setShowFarmRequiredDialog] = useState(false);
+
+    const userRole = localStorage.getItem("role");
 
     const segments = location.pathname.split("/");
     const activeTab = segments[segments.length - 1] as Tab;
@@ -30,14 +32,6 @@ export function FarmerLayout() {
         }
         navigate(`/farmer/${tab}`);
     }
-    const navItems = [
-        { id: "overview" as Tab, label: "Overview", icon: BarChart3 },
-        { id: "orders" as Tab, label: "Orders", icon: ShoppingBag },
-        { id: "products" as Tab, label: "Products", icon: Package },
-        { id: "product-batches" as Tab, label: "Product Batches", icon: Warehouse },
-        { id: "seasons" as Tab, label: "Manage Season", icon: Calendar },
-        { id: "farms" as Tab, label: "Manage Farm", icon: Warehouse },
-    ];
     function onLogout() {
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
@@ -47,6 +41,28 @@ export function FarmerLayout() {
         window.location.reload();
     }
 
+    const [navItems, setNavItems] = useState<any[]>([
+        { id: "overview" as Tab, label: "Overview", icon: BarChart3 },
+        { id: "farms" as Tab, label: "Manage Farm", icon: Warehouse },
+        { id: "seasons" as Tab, label: "Manage Season", icon: Calendar },
+        { id: "product-batches" as Tab, label: "Manage Batches", icon: Warehouse },
+        { id: "orders" as Tab, label: "Orders", icon: ShoppingBag },
+    ]);
+
+    useEffect(() => {
+        const baseItems = [
+            { id: "overview" as Tab, label: "Overview", icon: BarChart3 },
+            { id: "farms" as Tab, label: "Manage Farm", icon: Warehouse },
+            { id: "seasons" as Tab, label: "Manage Season", icon: Calendar },
+            { id: "product-batches" as Tab, label: "Manage Batches", icon: Warehouse },
+            { id: "orders" as Tab, label: "Orders", icon: ShoppingBag },
+        ];
+        if(userRole === "Admin") {
+            setNavItems([...baseItems, { id: "products" as Tab, label: "Products", icon: Package }]);
+        } else {
+            setNavItems(baseItems);
+        }
+    }, [userRole])
 
     return (
         <div className="min-h-screen bg-gray-50">

@@ -81,3 +81,97 @@ export const deleteFarm = async (farmId: string): Promise<any> => {
     }
   }
 };
+
+export const uploadCertificate = async (
+  farmId: string,
+  certificateFile: File
+): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const formData = new FormData();
+    formData.append("FarmId", farmId);
+    formData.append("Certificate", certificateFile);
+
+    const response = await axios.post(
+      API.farm.addCert(farmId),
+      formData,
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    } else {
+      return {
+        success: false,
+        message: "Error uploading certificate",
+      };
+    }
+  }
+};
+
+export const updateCertificate = async (
+  farmId: string,
+  certificateFile: File
+): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const formData = new FormData();
+    formData.append("FarmId", farmId);
+    formData.append("Certificate", certificateFile);
+
+    const response = await axios.put(
+      API.farm.updateCert(farmId),
+      formData,
+      {
+        headers: {
+          ...headers,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    } else {
+      return {
+        success: false,
+        message: "Error updating certificate",
+      };
+    }
+  }
+};
+
+export const deleteCertificate = async (farmId: string): Promise<any> => {
+  try {
+    const token = localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await axios.delete(
+      API.farm.deleteCert(farmId),
+      {
+        headers,
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) {
+      return error.response.data;
+    } else {
+      return {
+        success: false,
+        message: "Error deleting certificate",
+      };
+    }
+  }
+};
