@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
+import { formatVND } from "../../../components/ui/utils";
 import {
   Dialog,
   DialogContent,
@@ -266,18 +267,18 @@ export function OrderDetail({
                         Quantity: {item.quantity} {item.batch?.units || "units"}
                       </p>
                     </div>
-                    <p>${(item.quantity * item.unitPrice).toLocaleString()}</p>
+                    <p>{formatVND(item.quantity * item.unitPrice)}</p>
                   </div>
                 ))}
             </div>
             <div className="mt-6 pt-4 border-t space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping Fee:</span>
-                <span>${(order.shippingFee / 1000).toFixed(2)}</span>
+                <span>{formatVND(order.shippingFee)}</span>
               </div>
               <div className="flex justify-between pt-2 border-t">
                 <span>Total:</span>
-                <span>${(order.totalPrice / 1000).toFixed(2)}</span>
+                <span>{formatVND(order.totalPrice)}</span>
               </div>
             </div>
           </Card>

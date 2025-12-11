@@ -5,10 +5,11 @@ import type { Farm } from "../../../../types";
 
 interface FeaturedFarmsProps {
   farms: Farm[];
-  onNavigateToFarmDetails?: (farmId: string) => void;
+  onNavigateToFarmDetails: (farmId: string) => void;
+  onNavigateToAllFarms?: () => void;
 }
 
-export function FeaturedFarms({ farms, onNavigateToFarmDetails }: FeaturedFarmsProps) {
+export function FeaturedFarms({ farms, onNavigateToFarmDetails, onNavigateToAllFarms }: FeaturedFarmsProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { 
@@ -129,7 +130,7 @@ export function FeaturedFarms({ farms, onNavigateToFarmDetails }: FeaturedFarmsP
 
                 {/* View Details Button */}
                 <Button
-                  onClick={() => onNavigateToFarmDetails?.(farm.id)}
+                  onClick={() => onNavigateToFarmDetails(farm.id)}
                   className="w-full bg-green-600 to-emerald-600 hover:bg-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-300 group/btn"
                   style={{
                     marginTop: 'auto'
@@ -149,6 +150,7 @@ export function FeaturedFarms({ farms, onNavigateToFarmDetails }: FeaturedFarmsP
         {/* View All Farms Button */}
         <div className="text-center mt-12">
           <Button
+            onClick={onNavigateToAllFarms}
             size="lg"
             variant="outline"
             className="border-2 border-green-600 text-green-700 hover:bg-green-500 hover:text-white transition-all duration-300 px-8 py-6 text-lg font-semibold shadow-md hover:shadow-xl"

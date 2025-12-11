@@ -1,11 +1,13 @@
-import { Button } from "../../../../components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { Button } from '../../../../components/ui/button';
+import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeroProps {
   onNavigateToProducts: () => void;
 }
 
 export function Hero({ onNavigateToProducts }: HeroProps) {
+  const navigate = useNavigate();
   return (
     <section className="relative bg-gradient-to-br from-green-50 to-green-100 overflow-hidden">
       <div className="container mx-auto px-4 py-20 md:py-32">
@@ -18,8 +20,8 @@ export function Hero({ onNavigateToProducts }: HeroProps) {
               Farm Fresh Produce Delivered to Your Door
             </h1>
             <p className="text-lg text-green-700">
-              Experience the finest selection of organic fruits, vegetables, and leafy greens.
-              Harvested fresh daily and delivered with care.
+              Experience the finest selection of organic fruits, vegetables, and
+              leafy greens. Harvested fresh daily and delivered with care.
             </p>
             <div className="flex gap-4">
               <Button
@@ -29,7 +31,11 @@ export function Hero({ onNavigateToProducts }: HeroProps) {
                 Shop Now
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+              <Button
+                onClick={() => navigate('/farms')}
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-50"
+              >
                 Learn More
               </Button>
             </div>

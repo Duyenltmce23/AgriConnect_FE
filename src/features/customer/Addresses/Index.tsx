@@ -19,6 +19,7 @@ import {
   updateAddress,
   deleteAddress,
   type AddressItem,
+  setDefaultAddress,
 } from './api';
 import OpenApiService from './openApiService';
 import { Trash2, Edit2, Plus, MapPin } from 'lucide-react';
@@ -310,7 +311,7 @@ export function AddressesPage() {
 
   const handleSetDefault = async (a: AddressItem) => {
     try {
-      const resp = await updateAddress(a.id, { isDefault: true });
+      const resp = await setDefaultAddress(a.id);
       if (resp.success) {
         toast.success('Default address set');
         fetch();

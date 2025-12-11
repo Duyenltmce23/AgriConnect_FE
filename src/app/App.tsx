@@ -48,6 +48,10 @@ import { PaymentResultPage } from '../features/customer/PaymentResultPage/Index'
 import { ProductBatchList } from '../features/farmer/ProductBatchList/ProductBatchList';
 import { ProductBatchDetail } from '../features/farmer/ProductBatchDetail/ProductBatchDetail';
 import FarmsPage from '../features/customer/FarmsPage/Index';
+import { AddressesPage } from '../features/customer/Addresses/Index';
+
+import '@n8n/chat/style.css';
+import { createChat } from '@n8n/chat';
 
 type Page =
   | 'home'
@@ -164,7 +168,7 @@ export default function App() {
 
   function MainLayout() {
     return (
-      <div className='min-h-screen bg-gray-50'>
+      <div className="min-h-screen bg-gray-50">
         <Outlet />
         <Toaster />
       </div>
@@ -174,6 +178,12 @@ export default function App() {
   const [headerCartCount, setHeaderCartCount] = useState(0);
 
   function CustomerLayout() {
+    useEffect(() => {
+      createChat({
+        webhookUrl:
+          'http://localhost:5678/webhook/c3db0cb8-e8a6-4605-b7a3-5231ef700d4d/chat',
+      });
+    }, []);
     return (
       <>
         <Header notificationCount={0} cartItemsCount={headerCartCount} />
@@ -184,56 +194,61 @@ export default function App() {
 
   function AuthRedirect() {
     const role = localStorage.getItem('role');
-    if (role === 'customer') return <Navigate to='/' replace />;
-    if (role === 'farmer') return <Navigate to='/farmer' replace />;
-    if (role === 'admin') return <Navigate to='/admin' replace />;
+    if (role === 'customer') return <Navigate to="/" replace />;
+    if (role === 'farmer') return <Navigate to="/farmer" replace />;
+    if (role === 'admin') return <Navigate to="/admin" replace />;
     return <Outlet />;
   }
   function CustomerRedirect() {
     const role = localStorage.getItem('role');
-    if (!role) return <Navigate to='/auth' replace />;
+    if (!role) return <Navigate to="/auth" replace />;
     return <Outlet />;
   }
   function FarmerRedirect() {
     const role = localStorage.getItem('role');
-    if (!role) return <Navigate to='/auth' replace />;
+    if (!role) return <Navigate to="/auth" replace />;
     return <Outlet />;
   }
   function AdminRedirect() {
     const role = localStorage.getItem('role');
-    if (!role) return <Navigate to='/auth' replace />;
+    if (!role) return <Navigate to="/auth" replace />;
     return <Outlet />;
   }
+
   return (
     <Routes>
       <Route element={<MainLayout />}>
         {/* Auth Routes */}
         <Route element={<AuthRedirect />}>
-          <Route path='/auth' element={<Auth />} />
-          <Route path='/email-verified' element={<EmailVerifiedPage />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/email-verified" element={<EmailVerifiedPage />} />
         </Route>
         {/* Customer Routes */}
         <Route element={<CustomerLayout />}>
           <Route
-            path='/'
+            path="/"
             element={
               <HomePage
-                onNavigateToProducts={() => setCurrentPage('products')}
+                onNavigateToProducts={() => {
+                  setCurrentPage('products');
+                  navigate('/products');
+                }}
                 onNavigateToProductDetails={navigateToProductDetail}
+                onNavigateToFarmDetails={navigateToFarmDetail}
               />
             }
           />
           <Route
-            path='/products'
+            path="/products"
             element={
               <ProductPage
                 onNavigateToProductDetails={navigateToProductDetail}
               />
             }
           />
-          <Route path='/farms' element={<FarmsPage />} />
+          <Route path="/farms" element={<FarmsPage />} />
           <Route
-            path='/product/:productId'
+            path="/product/:productId"
             element={
               <ProductDetail
                 productId={selectedProductId}
@@ -252,9 +267,9 @@ export default function App() {
               />
             }
           />
-          <Route path='/farm/:farmId' element={<FarmDetail />} />
+          <Route path="/farm/:farmId" element={<FarmDetail />} />
           <Route
-            path='/traceability'
+            path="/traceability"
             element={
               <TraceabilityView
                 careEvents={careEvents}
@@ -264,14 +279,15 @@ export default function App() {
             }
           />
           <Route element={<CustomerRedirect />}>
-            <Route path='/profile' element={<UserProfile />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/addresses" element={<AddressesPage />} />
             <Route
-              path='/orders'
+              path="/orders"
               element={<OrdersPage onNavigateToFeedback={() => {}} />}
             />
-            <Route path='/orders/:orderId' element={<OrderDetailPage />} />
+            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
             <Route
-              path='/cart'
+              path="/cart"
               element={
                 <CartPage
                   onNavigateHome={() => navigate('/')}
@@ -280,17 +296,17 @@ export default function App() {
               }
             />
             <Route
-              path='/checkout'
+              path="/checkout"
               element={<CheckoutPage onBack={() => navigate('/cart')} />}
             />
-            <Route path='/order-payment' element={<OrderPaymentPage />} />
+            <Route path="/order-payment" element={<OrderPaymentPage />} />
             <Route
-              path='/payments/vnpay-return'
+              path="/payments/vnpay-return"
               element={<VNPayReturnPage />}
             />
-            <Route path='/payment-result' element={<PaymentResultPage />} />
+            <Route path="/payment-result" element={<PaymentResultPage />} />
             <Route
-              path='/order-confirmation'
+              path="/order-confirmation"
               element={
                 <OrderConfirmation
                   onViewOrders={() => setCurrentPage('orders')}
@@ -299,58 +315,58 @@ export default function App() {
               }
             />
             <Route
-              path='/favorites'
+              path="/favorites"
               element={
                 <FavoriteListPage
                   onNavigateToProducts={() => setCurrentPage('products')}
                 />
               }
             />
-            <Route path='/notifications' element={<NotificationPage />} />
+            <Route path="/notifications" element={<NotificationPage />} />
             <Route
-              path='/feedback'
+              path="/feedback"
               element={<FeedbackPage onBack={() => setCurrentPage('orders')} />}
             />
           </Route>
         </Route>
         {/* Farmer Routes */}
         <Route element={<FarmerLayout />}>
-          <Route path='/farmer' element={<FarmerOverview />} />
-          <Route path='/farmer/overview' element={<FarmerOverview />} />
-          <Route path='/farmer/profile' element={<FarmerProfile />} />
-          <Route path='/farmer/orders' element={<OrderList />} />
-          <Route path='/farmer/orders/:orderId' element={<OrderDetail />} />
-          <Route path='/farmer/products' element={<ProductList />} />
+          <Route path="/farmer" element={<FarmerOverview />} />
+          <Route path="/farmer/overview" element={<FarmerOverview />} />
+          <Route path="/farmer/profile" element={<FarmerProfile />} />
+          <Route path="/farmer/orders" element={<OrderList />} />
+          <Route path="/farmer/orders/:orderId" element={<OrderDetail />} />
+          <Route path="/farmer/products" element={<ProductList />} />
           <Route
-            path='/farmer/product-batches'
+            path="/farmer/product-batches"
             element={<ProductBatchList />}
           />
           <Route
-            path='/farmer/product-batches/:batchId'
+            path="/farmer/product-batches/:batchId"
             element={<ProductBatchDetail />}
           />
-          <Route path='/farmer/seasons' element={<SeasonList />} />
-          <Route path='/farmer/farms' element={<FarmManage />} />
-          <Route path='/farmer/seasons/:seasonId' element={<SeasonDetail />} />
-          <Route path='/farmer/farms/:farmId' element={<FarmerFarmDetail />} />
+          <Route path="/farmer/seasons" element={<SeasonList />} />
+          <Route path="/farmer/farms" element={<FarmManage />} />
+          <Route path="/farmer/seasons/:seasonId" element={<SeasonDetail />} />
+          <Route path="/farmer/farms/:farmId" element={<FarmerFarmDetail />} />
         </Route>
         {/* Admin Routes */}
         <Route element={<AdminLayout />}>
-          <Route path='/admin' element={<AdminStats />} />
-          <Route path='/admin/profile' element={<AdminProfile />} />
-          <Route path='/admin/farms' element={<FarmList />} />
-          <Route path='/admin/farms/:farmId' element={<AdminFarmDetail />} />
-          <Route path='/admin/users' element={<UserList />} />
-          <Route path='/admin/users/:userId' element={<UserDetail />} />
-          <Route path='/admin/categories' element={<CategoryList />} />
-          <Route path='/admin/products' element={<AdminProductList />} />
+          <Route path="/admin" element={<AdminStats />} />
+          <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route path="/admin/farms" element={<FarmList />} />
+          <Route path="/admin/farms/:farmId" element={<AdminFarmDetail />} />
+          <Route path="/admin/users" element={<UserList />} />
+          <Route path="/admin/users/:userId" element={<UserDetail />} />
+          <Route path="/admin/categories" element={<CategoryList />} />
+          <Route path="/admin/products" element={<AdminProductList />} />
         </Route>
         {/* Error Route */}
         <Route
-          path='/error'
+          path="/error"
           element={
             <ErrorPage
-              errorMessage='Failed to verify traceability information. Please check if the product batch is valid and try again.'
+              errorMessage="Failed to verify traceability information. Please check if the product batch is valid and try again."
               onNavigateHome={() => {
                 setCurrentPage('products');
                 navigate('/products');
@@ -360,7 +376,7 @@ export default function App() {
           }
         />
         {/* Fallback Route */}
-        <Route path='*' element={<ErrorPage />}></Route>
+        <Route path="*" element={<ErrorPage />}></Route>
       </Route>
     </Routes>
   );

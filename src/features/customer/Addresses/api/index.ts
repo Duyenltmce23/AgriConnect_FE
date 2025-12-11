@@ -70,6 +70,27 @@ export async function updateAddress(
   }
 }
 
+export async function setDefaultAddress(
+  addressId: string,
+): Promise<ApiResponse<AddressItem>> {
+  try {
+    const token = localStorage.getItem('token');
+
+    const api = axios.create({
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    const response = await api.patch<ApiResponse<AddressItem>>(
+      API.address.setDefault(addressId),
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data) return error.response.data;
+    throw error;
+  }
+}
+
 export async function deleteAddress(
   addressId: string
 ): Promise<ApiResponse<null>> {

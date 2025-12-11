@@ -88,51 +88,51 @@ export function Header({
   }
 
   return (
-    <header className='sticky top-0 z-50 w-full border-b bg-white'>
-      <div className='container mx-auto flex h-16 items-center justify-between px-4'>
+    <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <button
           onClick={onNavigateHome}
-          className='flex items-center gap-2 hover:opacity-80 transition-opacity'
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <div className='flex items-center justify-center w-10 h-10 rounded-full bg-green-600'>
-            <Leaf className='h-6 w-6 text-white' />
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-600">
+            <Leaf className="h-6 w-6 text-white" />
           </div>
-          <span className='text-green-700'>AgriConnect</span>
+          <span className="text-green-700">AgriConnect</span>
         </button>
 
         {/* Navigation */}
-        <nav className='hidden md:flex items-center gap-8'>
+        <nav className="hidden md:flex items-center gap-8">
           <button
             onClick={onNavigateHome}
-            className='text-foreground hover:text-green-600 transition-colors'
+            className="text-foreground hover:text-green-600 transition-colors"
           >
             Home
           </button>
           <button
             onClick={onNavigateToProducts}
-            className='text-foreground hover:text-green-600 transition-colors'
+            className="text-foreground hover:text-green-600 transition-colors"
           >
             Shop All
           </button>
           <button
             onClick={() => navigate('/farms')}
-            className='text-foreground hover:text-green-600 transition-colors'
+            className="text-foreground hover:text-green-600 transition-colors"
           >
             Farms
           </button>
         </nav>
 
         {/* Functions */}
-        <div className='flex items-center gap-4'>
-          <div className='hidden lg:flex items-center relative'>
-            <Search className='absolute left-3 h-4 w-4 text-muted-foreground' />
+        <div className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center relative">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder='Search products...'
+              placeholder="Search products..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              className='pl-9 w-64 bg-input-background border-border'
+              className="pl-9 w-64 bg-input-background border-border"
             />
           </div>
           {isLoggedIn ? (
@@ -144,7 +144,7 @@ export function Header({
                 icon={ShoppingCart}
                 onClick={onNavigateToCart}
                 count={cartCount}
-                badgeColor='green'
+                badgeColor="green"
               />
               <NavigationButton icon={LogOut} onClick={onLogout} />
             </>

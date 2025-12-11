@@ -6,6 +6,8 @@ export const API = {
     me: `${BASE_URL}/addresses/me`,
     add: `${BASE_URL}/addresses`,
     update: (addressId: string) => `${BASE_URL}/addresses/${addressId}`,
+    setDefault: (addressId: string) =>
+      `${BASE_URL}/addresses/${addressId}/default`,
     delete: (addressId: string) => `${BASE_URL}/addresses/${addressId}`,
   },
   auth: {

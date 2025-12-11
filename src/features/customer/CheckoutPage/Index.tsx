@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { getCartItems } from "../CartPage/api";
 import { Footer } from "../components";
+import { formatVND } from "../../../components/ui/utils";
 import {
   getAddresses,
   getShippingFee,
@@ -425,7 +426,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                               </span>
                             ) : (
                               <p className="font-semibold text-gray-900">
-                                ${(feeData?.fee || 0).toFixed(2)}
+                                {formatVND(feeData?.fee || 0)}
                               </p>
                             )}
                           </div>
@@ -492,7 +493,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                             {item.productName} x {item.quantity}
                           </span>
                           <span className="text-gray-900">
-                            ${item.itemPrice.toFixed(2)}
+                            {formatVND(item.itemPrice)}
                           </span>
                         </div>
                       ))}
@@ -506,7 +507,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="text-gray-900">
-                    ${(cartData?.totalPrice || 0).toFixed(2)}
+                    {formatVND(cartData?.totalPrice || 0)}
                   </span>
                 </div>
 
@@ -525,7 +526,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
                         {feeData?.isLoading ? (
                           <Loader className="h-3 w-3 animate-spin inline" />
                         ) : (
-                          `$${feeData?.fee.toFixed(2) || "0.00"}`
+                          formatVND(feeData?.fee || 0)
                         )}
                       </span>
                     </div>
@@ -537,7 +538,7 @@ export function CheckoutPage({ onBack }: CheckoutPageProps) {
               <div className="flex justify-between mb-6">
                 <span className="font-semibold text-gray-900">Total</span>
                 <span className="text-lg font-semibold text-green-600">
-                  ${getTotalPrice().toFixed(2)}
+                  {formatVND(getTotalPrice())}
                 </span>
               </div>
 

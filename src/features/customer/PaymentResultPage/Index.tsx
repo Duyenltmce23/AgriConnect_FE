@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Loader, CheckCircle, AlertCircle } from "lucide-react";
-import { Card } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { getOrderByCode } from "../CheckoutPage/api";
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Loader, CheckCircle, AlertCircle } from 'lucide-react';
+import { Card } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { getOrderByCode } from '../CheckoutPage/api';
 
 interface PaymentResultState {
   responseCode: string;
@@ -13,65 +13,65 @@ interface PaymentResultState {
 
 export function PaymentResultPage() {
   const navigate = useNavigate();
+  const [search] = useSearchParams();
   const location = useLocation();
   const [paymentStatus, setPaymentStatus] = useState<
-    "processing" | "success" | "failed"
-  >("processing");
+    'processing' | 'success' | 'failed'
+  >('processing');
   const [orderDetails, setOrderDetails] = useState<any>(null);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const state = (location.state as PaymentResultState) || {};
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const processPaymentResult = async () => {
       try {
-        const { responseCode, orderInfo } = state;
+        const responseCode = search.get('responseCode');
+        const orderInfo = search.get('orderCode');
 
         if (!responseCode || !orderInfo) {
-          setPaymentStatus("failed");
-          setErrorMessage("Invalid payment response");
+          setPaymentStatus('failed');
+          setErrorMessage('Invalid payment response');
           return;
         }
 
-        if (responseCode === "00") {
+        if (responseCode === '00') {
           // Payment successful - fetch order details
           try {
             const orderResponse = await getOrderByCode(orderInfo);
-            console.log("Full order response:", orderResponse);
-            console.log("Response keys:", Object.keys(orderResponse || {}));
-            console.log("Response.data:", orderResponse?.data);
+            console.log('Full order response:', orderResponse);
+            console.log('Response keys:', Object.keys(orderResponse || {}));
+            console.log('Response.data:', orderResponse?.data);
 
             // Extract orderData - handle different response formats
-            let orderData = orderResponse?.data || orderResponse;
+            const orderData = orderResponse?.data || orderResponse;
 
-            console.log("Extracted orderData:", orderData);
-            console.log("OrderData keys:", Object.keys(orderData || {}));
+            console.log('Extracted orderData:', orderData);
+            console.log('OrderData keys:', Object.keys(orderData || {}));
 
             if (orderData && (orderData.orderCode || orderData.id)) {
-              setPaymentStatus("success");
+              setPaymentStatus('success');
               setOrderDetails(orderData);
             } else {
-              setPaymentStatus("failed");
-              setErrorMessage("Invalid or missing order data");
+              setPaymentStatus('failed');
+              setErrorMessage('Invalid or missing order data');
             }
           } catch (error) {
-            setPaymentStatus("failed");
+            setPaymentStatus('failed');
             setErrorMessage(
               error instanceof Error
                 ? error.message
-                : "Failed to fetch order details"
+                : 'Failed to fetch order details'
             );
           }
         } else {
           // Payment failed
-          setPaymentStatus("failed");
+          setPaymentStatus('failed');
           const errorMessages: { [key: string]: string } = {
-            "01": "Bank account / card invalid",
-            "02": "Bank account / card is locked",
-            "03": "Bank account / card is closed",
-            "04": "Transaction declined",
-            "24": "Transaction cancelled",
-            "99": "Other errors",
+            '01': 'Bank account / card invalid',
+            '02': 'Bank account / card is locked',
+            '03': 'Bank account / card is closed',
+            '04': 'Transaction declined',
+            '24': 'Transaction cancelled',
+            '99': 'Other errors',
           };
           setErrorMessage(
             errorMessages[responseCode] ||
@@ -79,29 +79,29 @@ export function PaymentResultPage() {
           );
         }
       } catch (error) {
-        console.error("Payment result processing error:", error);
-        setPaymentStatus("failed");
+        console.error('Payment result processing error:', error);
+        setPaymentStatus('failed');
         setErrorMessage(
-          error instanceof Error ? error.message : "Payment processing failed"
+          error instanceof Error ? error.message : 'Payment processing failed'
         );
       }
     };
 
     processPaymentResult();
-  }, [state]);
+  }, [search]);
 
   const handleBackToHome = () => {
-    navigate("/");
+    navigate('/');
   };
 
   const handleTryAgain = () => {
-    navigate("/checkout");
+    navigate('/checkout');
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
       <Card className="w-full max-w-md p-8">
-        {paymentStatus === "processing" && (
+        {paymentStatus === 'processing' && (
           <div className="text-center space-y-4">
             <Loader className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
             <div>
@@ -113,7 +113,7 @@ export function PaymentResultPage() {
           </div>
         )}
 
-        {paymentStatus === "success" && (
+        {paymentStatus === 'success' && (
           <div className="text-center space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
               <CheckCircle className="h-10 w-10 text-green-600" />
@@ -138,46 +138,13 @@ export function PaymentResultPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Amount:</span>
                   <span className="font-semibold text-green-600">
-                    ₫{orderDetails.totalPrice.toLocaleString("vi-VN")}
+                    ₫{orderDetails.totalPrice.toLocaleString('vi-VN')}
                   </span>
                 </div>
               </div>
             )}
 
             <div className="space-y-2 pt-4">
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700"
-                onClick={() =>
-                  navigate("/order-confirmation", {
-                    state: {
-                      orderId: orderDetails?.orderId,
-                      orderCode: orderDetails?.orderCode || "N/A",
-                      orderDate:
-                        orderDetails?.orderDate || new Date().toISOString(),
-                      totalPrice: orderDetails?.totalPrice || 0,
-                      shippingFee: orderDetails?.shippingFee || 0,
-                      customerName:
-                        orderDetails?.customer?.fullname || "Customer",
-                      customerEmail: orderDetails?.customer?.email || "",
-                      customerPhone: orderDetails?.customer?.phone || "",
-                      orderStatus: orderDetails?.orderStatus || "Pending",
-                      paymentStatus: "Completed",
-                      paymentMethod:
-                        orderDetails?.paymentMethod || "Bank Transfer (VNPay)",
-                      shippingAddress: {
-                        detail: orderDetails?.address?.detail || "",
-                        ward: orderDetails?.address?.ward || "",
-                        district: orderDetails?.address?.district || "",
-                        province: orderDetails?.address?.province || "",
-                      },
-                      orderItems: orderDetails?.orderItems || [],
-                      orderData: orderDetails,
-                    },
-                  })
-                }
-              >
-                View Order Details
-              </Button>
               <Button
                 variant="outline"
                 className="w-full"
@@ -189,7 +156,7 @@ export function PaymentResultPage() {
           </div>
         )}
 
-        {paymentStatus === "failed" && (
+        {paymentStatus === 'failed' && (
           <div className="text-center space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
               <AlertCircle className="h-10 w-10 text-red-600" />
@@ -199,7 +166,7 @@ export function PaymentResultPage() {
                 Payment Failed
               </h2>
               <p className="text-gray-600 text-sm">
-                {errorMessage || "Your payment could not be processed."}
+                {errorMessage || 'Your payment could not be processed.'}
               </p>
             </div>
 

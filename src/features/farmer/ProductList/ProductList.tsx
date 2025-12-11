@@ -4,6 +4,7 @@ import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Card } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
+import { formatVND } from "../../../components/ui/utils";
 import {
   Select,
   SelectContent,
@@ -251,12 +252,12 @@ export function ProductList() {
               <TableRow>
                 <TableHead>Product Name</TableHead>
                 <TableHead>Category</TableHead>
-                {/* <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead> */}
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+                  {/* <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Status</TableHead> */}
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {currentProducts.map((product) => (
                 <TableRow key={product.id}>
@@ -266,8 +267,8 @@ export function ProductList() {
                       categories.find(c => c.id === product.categoryId)?.categoryName
                       ?? "Unknown"
                     }</TableCell>
-                  {/* <TableCell>
-                    ${product.price.toFixed(2)}/{product.unit}
+                  {/* <TableHead>Price</TableHead>
+                    {formatVND(product.price)}/{product.unit}
                   </TableCell>
                   <TableCell>{product.stock} {product.unit}</TableCell>
                   <TableCell>

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { getOrderDetail, updateOrderStatus } from './api';
 import { Footer } from '../components';
 import { ArrowLeft, MapPin, Truck, CheckCircle } from 'lucide-react';
+import { formatVND } from '../../../components/ui/utils';
 
 interface ShippingAddress {
   detail: string;
@@ -163,7 +164,7 @@ export function OrderDetailPage() {
   ).toLocaleDateString('vi-VN');
 
   return (
-    <div className='container mx-auto px-4 py-8'>
+    <div className='container mx-auto px-4 py-8 mb-8'>
       {/* Back Button */}
       <Button
         variant='ghost'
@@ -241,10 +242,10 @@ export function OrderDetailPage() {
                   Quantity: {item.quantity} {item.batch?.units || ''}
                 </p>
                 <p className='text-sm text-gray-600 mb-1'>
-                  Unit Price: ₫{item.unitPrice.toLocaleString('vi-VN')}
+                  Unit Price: {formatVND(item.unitPrice)}
                 </p>
                 <p className='font-semibold'>
-                  ₫{item.subTotal.toLocaleString('vi-VN')}
+                  {formatVND(item.subTotal)}
                 </p>
               </div>
             </div>
@@ -259,20 +260,17 @@ export function OrderDetailPage() {
           <div className='flex justify-between'>
             <span className='text-gray-600'>Subtotal:</span>
             <span>
-              ₫
-              {(orderData.totalPrice - orderData.shippingFee).toLocaleString(
-                'vi-VN'
-              )}
+              {formatVND(orderData.totalPrice - orderData.shippingFee)}
             </span>
           </div>
           <div className='flex justify-between'>
             <span className='text-gray-600'>Shipping Fee:</span>
-            <span>₫{orderData.shippingFee.toLocaleString('vi-VN')}</span>
+            <span>{formatVND(orderData.shippingFee)}</span>
           </div>
           <div className='border-t pt-2 flex justify-between font-semibold text-lg'>
             <span>Total:</span>
             <span className='text-green-600'>
-              ₫{orderData.totalPrice.toLocaleString('vi-VN')}
+              {formatVND(orderData.totalPrice)}
             </span>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Card } from "../../../components/ui/card";
+import { formatVND } from "../../../components/ui/utils";
 import {
   LineChart,
   Line,
@@ -216,7 +217,7 @@ export function FarmerOverview() {
             <div>
               <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
               <p className="text-3xl font-bold text-green-700">
-                ₫{totalRevenue.toLocaleString()}
+                {formatVND(totalRevenue)}
               </p>
               <p className="text-xs text-green-600 mt-2">This year</p>
             </div>

@@ -206,10 +206,13 @@ export function SeasonList() {
               className="pl-9"
             />
           </div>
-          <Select value={statusFilter} onValueChange={(value) => {
-            setStatusFilter(value === 'all' ? '' : value);
-            setCurrentPage(1);
-          }}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value === 'all' ? '' : value);
+              setCurrentPage(1);
+            }}
+          >
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
@@ -267,18 +270,26 @@ export function SeasonList() {
             <TableBody>
               {currentSeasons.map((season) => (
                 <TableRow key={season.id}>
-                  <TableCell style={{
-                    maxWidth: "200px",
-                    lineClamp: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}>{season.seasonName}</TableCell>
-                  <TableCell style={{
-                    maxWidth: "250px",
-                    lineClamp: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}>{season.seasonDesc}</TableCell>
+                  <TableCell
+                    style={{
+                      maxWidth: '200px',
+                      lineClamp: 1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {season.seasonName}
+                  </TableCell>
+                  <TableCell
+                    style={{
+                      maxWidth: '250px',
+                      lineClamp: 1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {season.seasonDesc}
+                  </TableCell>
                   <TableCell>{season.startDate}</TableCell>
                   <TableCell>{season.endDate}</TableCell>
                   <TableCell>

@@ -5,6 +5,7 @@ import { Button } from "../../../../components/ui/button";
 import { Card } from "../../../../components/ui/card";
 import { verifyCareEvents } from "../api";
 import { toast } from "sonner";
+import { formatVND } from "../../../../components/ui/utils";
 import type { ProductDetail, CareEvent } from "../types";
 import { ImageCarousel } from "./ImageCarousel";
 
@@ -92,7 +93,7 @@ export function ProductBasicInfo({
             </div>
           </div>
           <p className="text-3xl text-green-600">
-            {product.price.toFixed(2)}{" "}
+            {formatVND(product.price)}{" "}
             <span className="text-lg text-muted-foreground">
               / {product.unit}
             </span>

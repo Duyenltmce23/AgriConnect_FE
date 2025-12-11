@@ -1,7 +1,8 @@
-import { CheckCircle, Package, Truck, MapPin } from "lucide-react";
-import { Button } from "../../../components/ui/button";
-import { Card } from "../../../components/ui/card";
-import { useLocation, useNavigate } from "react-router-dom";
+import { CheckCircle, Package, Truck, MapPin } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
+import { Card } from '../../../components/ui/card';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { formatVND } from '../../../components/ui/utils';
 
 interface ShippingAddress {
   detail: string;
@@ -107,18 +108,18 @@ export function OrderConfirmation({
     orderData || {
       id: orderId || state.orderId,
       customer: {
-        fullname: customerName || state.customerName || "Customer",
-        email: customerEmail || state.customerEmail || "N/A",
-        phone: customerPhone || state.customerPhone || "N/A",
+        fullname: customerName || state.customerName || 'Customer',
+        email: customerEmail || state.customerEmail || 'N/A',
+        phone: customerPhone || state.customerPhone || 'N/A',
       },
       address: shippingAddress ||
         state.shippingAddress || {
-          detail: "N/A",
-          ward: "N/A",
-          district: "N/A",
-          province: "N/A",
+          detail: 'N/A',
+          ward: 'N/A',
+          district: 'N/A',
+          province: 'N/A',
         },
-      orderCode: orderCode || state.orderCode || "N/A",
+      orderCode: orderCode || state.orderCode || 'N/A',
       orderDate: orderDate || state.orderDate || new Date().toISOString(),
       totalPrice:
         totalPrice !== undefined
@@ -126,11 +127,11 @@ export function OrderConfirmation({
           : state.totalPrice || state.subtotal || 0,
       shippingFee:
         shippingFee !== undefined ? shippingFee : state.shippingFee || 0,
-      orderStatus: orderStatus || state.orderStatus || "Pending",
-      paymentStatus: paymentStatus || state.paymentStatus || "Pending",
-      paymentMethod: paymentMethod || state.paymentMethod || "Cash on Delivery",
+      orderStatus: orderStatus || state.orderStatus || 'Pending',
+      paymentStatus: paymentStatus || state.paymentStatus || 'Pending',
+      paymentMethod: paymentMethod || state.paymentMethod || 'Cash on Delivery',
       orderItems: orderItems || state.orderItems || [],
-      orderType: state.orderType || "Order",
+      orderType: state.orderType || 'Order',
       createdAt: state.createdAt || new Date().toISOString(),
     };
 
@@ -149,12 +150,12 @@ export function OrderConfirmation({
   const finalShippingAddress = effectiveOrderData.address;
   const finalOrderItems = effectiveOrderData.orderItems;
 
-  console.log("EffectiveOrderData:", effectiveOrderData);
-  console.log("FinalOrderItems:", finalOrderItems);
+  console.log('EffectiveOrderData:', effectiveOrderData);
+  console.log('FinalOrderItems:', finalOrderItems);
 
   const estimatedDelivery = new Date(
     Date.now() + 5 * 24 * 60 * 60 * 1000
-  ).toLocaleDateString("vi-VN");
+  ).toLocaleDateString('vi-VN');
 
   return (
     <div className="flex items-center justify-center p-4">
@@ -180,13 +181,11 @@ export function OrderConfirmation({
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Order Date</p>
-              <p>{new Date(finalOrderDate).toLocaleDateString("vi-VN")}</p>
+              <p>{new Date(finalOrderDate).toLocaleDateString('vi-VN')}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Total Amount</p>
-              <p className="text-green-600">
-                ₫{finalTotalPrice.toLocaleString("vi-VN")}
-              </p>
+              <p className="text-green-600">{formatVND(finalTotalPrice)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">
@@ -213,7 +212,7 @@ export function OrderConfirmation({
             <div>
               <p className="text-sm text-muted-foreground mb-1">Shipping Fee</p>
               <p className="font-medium">
-                ₫{finalShippingFee.toLocaleString("vi-VN")}
+                ₫{finalShippingFee.toLocaleString('vi-VN')}
               </p>
             </div>
           </div>
@@ -248,7 +247,7 @@ export function OrderConfirmation({
                       {farm.farmName}
                     </p>
                     <div className="space-y-2 ml-2">
-                      {farm.items.map((item: OrderItemDetail) => (
+                      {farm.items?.map((item: OrderItemDetail) => (
                         <div
                           key={item.itemId}
                           className="flex justify-between text-sm text-gray-700 p-2 bg-gray-50 rounded"
@@ -256,7 +255,7 @@ export function OrderConfirmation({
                           <div className="flex-1">
                             <p className="font-medium">{item.productName}</p>
                             <p className="text-xs text-gray-500">
-                              Batch: {item.batchCode} | {item.categoryName} |{" "}
+                              Batch: {item.batchCode} | {item.categoryName} |{' '}
                               {item.seasonName}
                             </p>
                           </div>
@@ -267,7 +266,7 @@ export function OrderConfirmation({
                             <p className="font-medium">
                               ₫
                               {(item.itemPrice * item.quantity).toLocaleString(
-                                "vi-VN"
+                                'vi-VN'
                               )}
                             </p>
                           </div>
@@ -287,12 +286,12 @@ export function OrderConfirmation({
               <div>
                 <p className="font-medium">{finalCustomerName}</p>
                 <p className="text-muted-foreground">
-                  {finalShippingAddress?.detail || "N/A"}
+                  {finalShippingAddress?.detail || 'N/A'}
                 </p>
                 <p className="text-muted-foreground">
-                  {finalShippingAddress?.ward || "N/A"},{" "}
-                  {finalShippingAddress?.district || "N/A"},{" "}
-                  {finalShippingAddress?.province || "N/A"}
+                  {finalShippingAddress?.ward || 'N/A'},{' '}
+                  {finalShippingAddress?.district || 'N/A'},{' '}
+                  {finalShippingAddress?.province || 'N/A'}
                 </p>
               </div>
             </div>
@@ -347,7 +346,7 @@ export function OrderConfirmation({
               if (finalOrderId) {
                 navigate(`/orders/${orderId}`);
               } else {
-                console.warn("Order ID not found");
+                console.warn('Order ID not found');
               }
             }}
           >

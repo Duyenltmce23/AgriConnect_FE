@@ -9,6 +9,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Footer } from '../components';
+import { formatVND } from '../../../components/ui/utils';
 import type { CartData } from './types';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -43,9 +44,24 @@ export function CartPage({
   const [error, setError] = useState<string | null>(null);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
   const [deletingAll, setDeletingAll] = useState(false);
-  const [quantityInputs, setQuantityInputs] = useState<
-    Record<string, number>
-  >({});
+
+  // ❗ TEMP INPUTS for quantity — THIS is what caused your bug
+  const [quantityInputs, setQuantityInputs] = useState<Record<string, number>>(
+    {}
+  );
+
+  // Helper to clear temporary inputs
+  const clearQuantityInputs = (itemId?: string) => {
+    if (!itemId) {
+      setQuantityInputs({});
+      return;
+    }
+    setQuantityInputs((prev) => {
+      const updated = { ...prev };
+      delete updated[itemId];
+      return updated;
+    });
+  };
 
   const cartItemCount =
     cartData?.cartItems
@@ -60,7 +76,6 @@ export function CartPage({
     cartData.cartItems.filter((farm) => farm !== null).length > 0;
 
   const handleNavigateToProduct = (batchId: string) => {
-    console.log('Navigating to product with batchId:', batchId);
     navigate(`/product/${batchId}`);
   };
 
@@ -78,57 +93,99 @@ export function CartPage({
       return;
     }
 
-    setUpdatingItems((prev) => new Set(prev).add(itemId));
+    setUpdatingItems((prev) => {
+      const s = new Set(prev);
+      s.add(itemId);
+      return s;
+    });
+
     try {
       const cartId = cartData?.cartId;
       if (!cartId) {
         toast.error('Cart ID not found');
         return;
       }
+
       const payload: UpdateCartItemRequest = { batchId, quantity: newQuantity };
       const response = await updateCartItemQuantity(cartId, payload);
 
       if (response.success) {
-        toast.success('Cart updated');
-        // Refetch cart to get properly formatted data
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
-          const count =
-            freshCart.data.cartItems
-              ?.filter((farm: any) => farm !== null)
-              .reduce(
-                (sum: number, farm: any) => sum + (farm?.items?.length || 0),
+        // Update UI immediately
+        setCartData((prevData) => {
+          if (!prevData) return prevData;
+
+          const newCartItems = prevData.cartItems.map((farm) => {
+            if (!farm) return farm;
+            return {
+              ...farm,
+              items:
+                farm.items?.map((item) => {
+                  if (item.itemId === itemId) {
+                    return {
+                      ...item,
+                      quantity: newQuantity,
+                      itemPrice: item.batchPrice * newQuantity,
+                    };
+                  }
+                  return {
+                    ...item,
+                    itemPrice: item.batchPrice * (item.quantity ?? 1),
+                  };
+                }) || [],
+            };
+          });
+
+          const newTotalPrice = newCartItems.reduce((sum, farm) => {
+            if (!farm || !farm.items) return sum;
+            return (
+              sum +
+              farm.items.reduce(
+                (s, it) => s + it.batchPrice * (it.quantity ?? 0),
                 0
-              ) || 0;
-          onCartCountUpdate?.(count);
-          context?.setHeaderCartCount?.(count);
-        }
+              )
+            );
+          }, 0);
+
+          return {
+            ...prevData,
+            cartItems: newCartItems,
+            totalPrice: newTotalPrice,
+          };
+        });
+
+        toast.success('Cart updated');
+
+        // FIX: Clear temporary input after update
+        clearQuantityInputs(itemId);
       } else {
         toast.error(response.message || 'Failed to update cart');
-        // Refetch cart on failure to sync state
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
+
+        const fresh = await getCartItems();
+        if (fresh.success && fresh.data) {
+          setCartData(fresh.data);
+
+          // FIX: Clear all temp inputs
+          clearQuantityInputs();
         }
       }
     } catch (err) {
       console.error('Error updating cart:', err);
       toast.error('Failed to update cart');
-      // Refetch cart on error to sync state
+
       try {
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
+        const fresh = await getCartItems();
+        if (fresh.success && fresh.data) {
+          setCartData(fresh.data);
+
+          // FIX: clear stale inputs
+          clearQuantityInputs();
         }
-      } catch (refetchErr) {
-        console.error('Error refetching cart:', refetchErr);
-      }
+      } catch (e) {}
     } finally {
       setUpdatingItems((prev) => {
-        const updated = new Set(prev);
-        updated.delete(itemId);
-        return updated;
+        const s = new Set(prev);
+        s.delete(itemId);
+        return s;
       });
     }
   };
@@ -140,45 +197,25 @@ export function CartPage({
 
       if (response.success) {
         toast.success('Item removed from cart');
-        // Refetch cart to get properly formatted data
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
-          const count =
-            freshCart.data.cartItems
-              ?.filter((farm: any) => farm !== null)
-              .reduce(
-                (sum: number, farm: any) => sum + (farm?.items?.length || 0),
-                0
-              ) || 0;
-          onCartCountUpdate?.(count);
-          context?.setHeaderCartCount?.(count);
+
+        const fresh = await getCartItems();
+        if (fresh.success && fresh.data) {
+          setCartData(fresh.data);
+
+          // FIX: Clear temporary for removed item
+          clearQuantityInputs(itemId);
         }
       } else {
         toast.error(response.message || 'Failed to remove item');
-        // Refetch cart on failure to sync state
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
-        }
       }
     } catch (err) {
       console.error('Error removing item:', err);
       toast.error('Failed to remove item');
-      // Refetch cart on error to sync state
-      try {
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
-        }
-      } catch (refetchErr) {
-        console.error('Error refetching cart:', refetchErr);
-      }
     } finally {
       setUpdatingItems((prev) => {
-        const updated = new Set(prev);
-        updated.delete(itemId);
-        return updated;
+        const s = new Set(prev);
+        s.delete(itemId);
+        return s;
       });
     }
   };
@@ -199,68 +236,44 @@ export function CartPage({
       const response = await deleteAllCart(cartData.cartId);
 
       if (response.success) {
-        toast.success('All items removed from cart');
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
-          const count =
-            freshCart.data.cartItems
-              ?.filter((farm: any) => farm !== null)
-              .reduce(
-                (sum: number, farm: any) => sum + (farm?.items?.length || 0),
-                0
-              ) || 0;
-          onCartCountUpdate?.(count);
-          context?.setHeaderCartCount?.(count);
-        } else {
-          // If server returned success but fetching fresh cart failed, reset locally
-          setCartData(null);
-          onCartCountUpdate?.(0);
-          context?.setHeaderCartCount?.(0);
-        }
-      } else {
-        toast.error(response.message || 'Failed to remove all items');
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
+        toast.success('All items removed');
+
+        const fresh = await getCartItems();
+        if (fresh.success && fresh.data) {
+          setCartData(fresh.data);
+
+          // FIX: Reset ALL temp inputs
+          clearQuantityInputs();
         }
       }
     } catch (err) {
       console.error('Error deleting all items:', err);
       toast.error('Failed to remove all items');
-      try {
-        const freshCart = await getCartItems();
-        if (freshCart.success && freshCart.data) {
-          setCartData(freshCart.data);
-        }
-      } catch (refetchErr) {
-        console.error(
-          'Error refetching cart after delete-all error:',
-          refetchErr
-        );
-      }
     } finally {
       setDeletingAll(false);
     }
   };
 
+  // INITIAL FETCH — FIX HERE
   useEffect(() => {
     const fetchCart = async () => {
       try {
         setLoading(true);
         setError(null);
+
         const response = await getCartItems();
         if (response.success && response.data) {
           setCartData(response.data);
+
+          // FIX: Clear stale quantity inputs on page load
+          clearQuantityInputs();
         } else {
           setError(response.message || 'Failed to fetch cart');
           toast.error(response.message || 'Failed to fetch cart items');
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'An error occurred';
-        setError(errorMessage);
-        console.error('Error fetching cart items:', err);
+        const msg = err instanceof Error ? err.message : 'An error occurred';
+        setError(msg);
         toast.error('Failed to load cart');
       } finally {
         setLoading(false);
@@ -271,11 +284,11 @@ export function CartPage({
 
   if (loading) {
     return (
-      <div className='container mx-auto px-4 py-8'>
-        <div className='flex items-center justify-center min-h-96'>
-          <div className='text-center'>
-            <Loader className='h-8 w-8 animate-spin text-green-600 mx-auto mb-4' />
-            <p className='text-gray-600'>Loading your cart...</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <Loader className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading your cart...</p>
           </div>
         </div>
       </div>
@@ -284,10 +297,10 @@ export function CartPage({
 
   if (error || !cartData) {
     return (
-      <div className='container mx-auto px-4 py-8'>
-        <div className='text-center py-12'>
-          <ShoppingCart className='h-16 w-16 text-gray-300 mx-auto mb-4' />
-          <p className='text-gray-500 mb-4'>{error || 'Failed to load cart'}</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 mb-4">{error || 'Failed to load cart'}</p>
           <Button onClick={onNavigateHome}>Continue Shopping</Button>
         </div>
       </div>
@@ -296,99 +309,99 @@ export function CartPage({
 
   return (
     <div>
-      <div className='container mx-auto px-4 py-8'>
-        <Button variant='ghost' onClick={onNavigateHome} className='mb-6'>
-          <ArrowLeft className='mr-2 h-4 w-4' />
+      <div className="container mx-auto px-4 py-8">
+        <Button variant="ghost" onClick={onNavigateHome} className="mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Continue Shopping
         </Button>
 
-        <div className='grid lg:grid-cols-3 gap-8'>
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
-          <div className='lg:col-span-2'>
-            <Card className='p-6'>
-              <div className='flex items-center gap-2 mb-6'>
-                <ShoppingCart className='h-6 w-6 text-green-600' />
+          <div className="lg:col-span-2">
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <ShoppingCart className="h-6 w-6 text-green-600" />
                 <h2>Shopping Cart ({cartItemCount} items)</h2>
               </div>
 
               {!hasCartItems ? (
-                <div className='text-center py-12'>
-                  <ShoppingCart className='h-16 w-16 text-gray-300 mx-auto mb-4' />
-                  <p className='text-gray-500 mb-4'>Your cart is empty</p>
+                <div className="text-center py-12">
+                  <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 mb-4">Your cart is empty</p>
                   <Button onClick={onNavigateHome}>Start Shopping</Button>
                 </div>
               ) : (
-                <div className='space-y-4'>
+                <div className="space-y-4">
                   {cartData.cartItems
                     .filter((farm) => farm !== null && farm.items)
                     .map((farm) => (
                       <div
                         key={farm.farmId}
-                        className='border border-gray-200 rounded-lg p-4 mb-4'
+                        className="border border-gray-200 rounded-lg p-4 mb-4"
                       >
-                        <h3 className='font-semibold text-green-600 mb-3'>
+                        <h3 className="font-semibold text-green-600 mb-3">
                           {farm.farmName}
                         </h3>
-                        <div className='space-y-3'>
+                        <div className="space-y-3">
                           {farm.items?.map((item) => (
                             <div
                               key={item.itemId}
-                              className='flex gap-4 pb-3 border-b border-gray-100 items-start'
+                              className="flex gap-4 pb-3 border-b border-gray-100 items-start"
                             >
                               <button
                                 onClick={() =>
                                   handleNavigateToProduct(item.itemId)
                                 }
-                                className='flex-shrink-0 hover:opacity-80 transition-opacity'
+                                className="flex-shrink-0 hover:opacity-80 transition-opacity"
                               >
                                 {item.batchImageUrls.length > 0 ? (
                                   <img
                                     src={item.batchImageUrls[0]}
                                     alt={item.productName}
-                                    className='w-20 h-20 object-cover rounded-lg cursor-pointer'
+                                    className="w-20 h-20 object-cover rounded-lg cursor-pointer"
                                   />
                                 ) : (
-                                  <div className='w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center cursor-pointer'>
-                                    <ShoppingCart className='h-8 w-8 text-gray-400' />
+                                  <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center cursor-pointer">
+                                    <ShoppingCart className="h-8 w-8 text-gray-400" />
                                   </div>
                                 )}
                               </button>
                               <div
-                                className='flex-1 cursor-pointer'
+                                className="flex-1 cursor-pointer"
                                 onClick={() =>
                                   handleNavigateToProduct(item.batchId)
                                 }
                               >
-                                <h4 className='font-medium hover:text-green-600 transition-colors'>
+                                <h4 className="font-medium hover:text-green-600 transition-colors">
                                   {item.productName}
                                 </h4>
-                                <p className='text-sm text-gray-600'>
+                                <p className="text-sm text-gray-600">
                                   {item.categoryName} • {item.seasonName}
                                 </p>
-                                <p className='text-sm text-gray-500'>
+                                <p className="text-sm text-gray-500">
                                   Batch: {item.batchCode}
                                 </p>
-                                <p className='text-gray-600 mt-1'>
-                                  ${item.batchPrice.toFixed(2)} / {item.units}
+                                <p className="text-gray-600 mt-1">
+                                  {formatVND(item.batchPrice)} / {item.units}
                                 </p>
-                                <p className='text-xs text-gray-500 mt-1'>
+                                <p className="text-xs text-gray-500 mt-1">
                                   Status: {item.seasonStatus}
                                 </p>
                               </div>
-                              <div className='text-right flex flex-col gap-2'>
+                              <div className="text-right flex flex-col gap-2">
                                 <div>
-                                  <p className='text-sm text-gray-600'>
-                                    Unit Price: ${item.batchPrice.toFixed(2)}
+                                  <p className="text-sm text-gray-600">
+                                    Unit Price: {formatVND(item.batchPrice)}
                                   </p>
-                                  <p className='font-semibold'>
-                                    ${item.itemPrice.toFixed(2)}
+                                  <p className="font-semibold">
+                                    {formatVND(item.itemPrice)}
                                   </p>
                                 </div>
-                                <div className='flex items-center gap-2 border border-gray-300 rounded-lg p-1'>
+                                <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
                                   <Button
-                                    variant='ghost'
-                                    size='icon'
-                                    className='h-6 w-6'
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
                                     onClick={() =>
                                       handleUpdateQuantity(
                                         item.itemId,
@@ -401,11 +414,13 @@ export function CartPage({
                                       item.quantity <= 1
                                     }
                                   >
-                                    <Minus className='h-3 w-3' />
+                                    <Minus className="h-3 w-3" />
                                   </Button>
+
+                                  {/* FIXED: quantityInputs is now safe because we clear it */}
                                   <input
-                                    type='number'
-                                    min='1'
+                                    type="number"
+                                    min="1"
                                     value={
                                       quantityInputs[item.itemId] ??
                                       item.quantity
@@ -421,40 +436,30 @@ export function CartPage({
                                     }}
                                     onKeyDown={(e) => {
                                       if (e.key === 'Enter') {
-                                        const newQuantity =
+                                        const newQty =
                                           quantityInputs[item.itemId] ??
                                           item.quantity;
-                                        if (
-                                          !isNaN(newQuantity) &&
-                                          newQuantity >= 1
-                                        ) {
+                                        if (newQty >= 1) {
                                           handleUpdateQuantity(
                                             item.itemId,
                                             item.batchId,
-                                            newQuantity
+                                            newQty
                                           );
-                                          setQuantityInputs((prev) => {
-                                            const updated = { ...prev };
-                                            delete updated[item.itemId];
-                                            return updated;
-                                          });
+                                          clearQuantityInputs(item.itemId);
                                         }
                                       }
                                     }}
-                                    onBlur={() => {
-                                      setQuantityInputs((prev) => {
-                                        const updated = { ...prev };
-                                        delete updated[item.itemId];
-                                        return updated;
-                                      });
-                                    }}
+                                    onBlur={() =>
+                                      clearQuantityInputs(item.itemId)
+                                    }
                                     disabled={updatingItems.has(item.itemId)}
-                                    className='w-12 text-center text-sm font-medium border-0 outline-none'
+                                    className="w-12 text-center text-sm font-medium border-0 outline-none"
                                   />
+
                                   <Button
-                                    variant='ghost'
-                                    size='icon'
-                                    className='h-6 w-6'
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
                                     onClick={() =>
                                       handleUpdateQuantity(
                                         item.itemId,
@@ -464,20 +469,20 @@ export function CartPage({
                                     }
                                     disabled={updatingItems.has(item.itemId)}
                                   >
-                                    <Plus className='h-3 w-3' />
+                                    <Plus className="h-3 w-3" />
                                   </Button>
-                                  <span className='text-xs text-gray-600 ml-1 min-w-fit'>
+                                  <span className="text-xs text-gray-600 ml-1 min-w-fit">
                                     KG
                                   </span>
                                 </div>
                                 <Button
-                                  variant='ghost'
-                                  size='icon'
-                                  className='h-8 text-red-500 hover:text-red-600 hover:bg-red-50'
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50"
                                   onClick={() => handleRemoveItem(item.itemId)}
                                   disabled={updatingItems.has(item.itemId)}
                                 >
-                                  <Trash2 className='h-4 w-4' />
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -491,44 +496,44 @@ export function CartPage({
           </div>
 
           {/* Order Summary */}
-          <div className='lg:col-span-1'>
-            <Card className='p-6 sticky top-24'>
-              <h3 className='mb-4'>Order Summary</h3>
+          <div className="lg:col-span-1">
+            <Card className="p-6 sticky top-24">
+              <h3 className="mb-4">Order Summary</h3>
 
               {!hasCartItems ? (
-                <div className='text-gray-500 py-4'>
-                  <p className='text-sm mb-4'>
+                <div className="text-gray-500 py-4">
+                  <p className="text-sm mb-4">
                     Cart is empty. Add items to see the total.
                   </p>
                 </div>
               ) : (
                 <>
-                  <div className='space-y-3 mb-4 pb-4 border-b border-gray-200'>
-                    <div className='flex justify-between'>
-                      <span className='text-gray-600'>Customer</span>
-                      <span className='font-medium'>{cartData.fullname}</span>
+                  <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Customer</span>
+                      <span className="font-medium">{cartData.fullname}</span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Email</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Email</span>
                       <span>{cartData.email}</span>
                     </div>
-                    <div className='flex justify-between text-sm'>
-                      <span className='text-gray-600'>Phone</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Phone</span>
                       <span>{cartData.phone}</span>
                     </div>
                   </div>
 
-                  <div className='flex justify-between mb-6 pt-4'>
-                    <span className='text-lg font-semibold'>Total</span>
-                    <span className='text-lg font-semibold text-green-600'>
-                      ${(cartData?.totalPrice || 0).toFixed(2)}
+                  <div className="flex justify-between mb-6 pt-4">
+                    <span className="text-lg font-semibold">Total</span>
+                    <span className="text-lg font-semibold text-green-600">
+                      {formatVND(cartData?.totalPrice || 0)}
                     </span>
                   </div>
                 </>
               )}
 
               <Button
-                className='w-full bg-green-600 hover:bg-green-700'
+                className="w-full bg-green-600 hover:bg-green-700"
                 disabled={cartItemCount === 0}
                 onClick={handleProceedToCheckout}
               >
@@ -537,14 +542,14 @@ export function CartPage({
 
               <div className={cartItemCount === 0 ? 'hidden' : 'mt-3'}>
                 <Button
-                  variant='ghost'
-                  className='w-full text-red-600 border border-red-200 hover:bg-red-50'
+                  variant="ghost"
+                  className="w-full text-red-600 border border-red-200 hover:bg-red-50"
                   onClick={handleDeleteAll}
                   disabled={deletingAll}
                 >
                   {deletingAll ? (
-                    <span className='flex items-center justify-center gap-2'>
-                      <Loader className='h-4 w-4 animate-spin text-red-600' />
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader className="h-4 w-4 animate-spin text-red-600" />
                       Removing all
                     </span>
                   ) : (
@@ -556,31 +561,31 @@ export function CartPage({
               <div
                 className={cartItemCount === 0 ? 'hidden' : 'mt-4 space-y-2'}
               >
-                <div className='flex items-center gap-2 text-sm text-gray-600'>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg
-                    className='h-5 w-5 text-green-600'
-                    fill='none'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
+                    className="h-5 w-5 text-green-600"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <path d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'></path>
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                   Secure Checkout
                 </div>
-                <div className='flex items-center gap-2 text-sm text-gray-600'>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <svg
-                    className='h-5 w-5 text-green-600'
-                    fill='none'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
+                    className="h-5 w-5 text-green-600"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <path d='M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'></path>
+                    <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                   </svg>
                   Multiple Payment Options
                 </div>

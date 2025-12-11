@@ -5,6 +5,7 @@ import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
+import { formatVND } from '../../../components/ui/utils';
 import {
   Select,
   SelectContent,
@@ -422,7 +423,7 @@ export function OrderList() {
                     </TableCell>
                     <TableCell>{order.orderItems.length}</TableCell>
                     <TableCell>
-                      ${(order.totalPrice / 1000).toFixed(2)}
+                      {formatVND(order.totalPrice)}
                     </TableCell>
                     <TableCell>
                       <Select

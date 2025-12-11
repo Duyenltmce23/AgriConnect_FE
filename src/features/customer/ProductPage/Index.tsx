@@ -91,12 +91,8 @@ export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
           selectedCategory?.categoryName?.toLowerCase()
         : true;
       const matchesSearch = searchQuery
-        ? batchCodeValue
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          batch.product
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
+        ? batchCodeValue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          batch.product.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
       const matchesProduct =
         selectedProducts.length > 0
@@ -105,12 +101,7 @@ export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
       const matchesPrice =
         batch.price >= priceRange[0] && batch.price <= priceRange[1];
 
-      return (
-        matchesCategory &&
-        matchesSearch &&
-        matchesProduct &&
-        matchesPrice
-      );
+      return matchesCategory && matchesSearch && matchesProduct && matchesPrice;
     });
   }, [
     productBatches,
@@ -145,19 +136,6 @@ export function ProductPage({ onNavigateToProductDetails }: ProductPageProps) {
           <p className="text-muted-foreground">
             Browse our complete selection of fresh organic produce
           </p>
-        </div>
-
-        {/* Search Input */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search by batch code or product name..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10"
-            />
-          </div>
         </div>
 
         {/* Categories (new) */}

@@ -1,4 +1,5 @@
 import type { Status } from "../types";
+import { formatVND } from "../../../../components/ui/utils";
 
 interface OrderProps {
     orderCode: string;
@@ -34,7 +35,7 @@ export function Order({ orderCode, orderDate, status, items, total }: OrderProps
             <p className="text-sm text-muted-foreground">
                 {itemsList}
             </p>
-            <p className="mt-2">Total: ${total}</p>
+            <p className="mt-2">Total: {formatVND(total)}</p>
         </div>
     );
 }

@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { useCart } from "../hooks/useCart";
+import { formatVND } from "./ui/utils";
 
 interface ProductCardProps {
   id: string;
@@ -56,7 +57,7 @@ export function ProductCard({ id, name, price, unit, image, badge, onNavigateToP
 
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-green-700">${price.toFixed(2)}</span>
+              <span className="text-green-700">{formatVND(price)}</span>
             </div>
             <Button
               size="sm"

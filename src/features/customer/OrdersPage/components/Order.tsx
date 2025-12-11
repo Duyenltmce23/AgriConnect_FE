@@ -4,6 +4,7 @@ import type { Order } from "../types";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { formatVND } from "../../../../components/ui/utils";
 
 interface OrderProps {
   order: Order;
@@ -110,7 +111,7 @@ export function Order({
                   Batch {item.batchId.substring(0, 8)}... x{" "}
                   {item.quantity.toFixed(2)}
                 </span>
-                <span className="font-medium">${item.subTotal.toFixed(2)}</span>
+                <span className="font-medium">{formatVND(item.subTotal)}</span>
               </div>
             ))}
           </div>

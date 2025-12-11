@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { useCart } from '../hooks/useCart';
+import { formatVND } from './ui/utils';
 import type { ProductBatch } from '../features/customer/ProductPage/types';
 
 interface ProductBatchCardProps extends ProductBatch {
@@ -156,7 +157,7 @@ export function ProductBatchCard({
               <div>
                 <p className="text-xs text-muted-foreground">Price per unit</p>
                 <span className="text-xl font-bold text-green-700">
-                  ${price.toFixed(2)}
+                  {formatVND(price)}
                 </span>
               </div>
             </div>

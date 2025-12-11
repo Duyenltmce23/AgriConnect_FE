@@ -42,7 +42,7 @@ export function ImageCarousel({
           src={currentImage}
           alt={`${productName} - Image ${currentIndex + 1}`}
           className="w-full h-96 object-cover rounded-lg"
-          style={{ maxHeight: '50vh' }}
+          style={{ minHeight: '50vh', maxHeight: '50vh' }}
         />
       </div>
 
