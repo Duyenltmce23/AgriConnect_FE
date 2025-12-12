@@ -30,12 +30,14 @@ interface ProductBatch {
   units: string;
   price: number;
   plantingDate: string;
-  harvestDate: string;
+  harvestDate?: string;
   seasonId: string;
   imageUrls: string[];
   createdAt: string;
   updatedAt?: string;
   id: string;
+  verificationQr?: string;
+  season?: any;
 }
 
 type FarmResponse = ApiResponse<FarmData>;

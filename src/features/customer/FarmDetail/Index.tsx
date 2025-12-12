@@ -1,24 +1,29 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
 import { CertificateViewer } from '../../../components/CertificateViewer';
-import { getFarmDetails } from './api';
+import { getFarmDetails, getFarmProductBatches } from './api';
 import { Footer } from '../components';
-import type { FarmData } from './types';
+import type { FarmData, ProductBatch } from './types';
 import { addFavoriteFarm, getMyFavoriteFarms } from '../FavoriteFarms/api';
+import { ProductBatchCard } from './components/ProductBatchCard';
 import { toast } from 'sonner';
 
 export function FarmDetail() {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
   const [farm, setFarm] = useState<FarmData | null>(null);
+  const [batches, setBatches] = useState<ProductBatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFavoriting, setIsFavoriting] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [batchesLoading, setBatchesLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,11 +40,21 @@ export function FarmDetail() {
         } else {
           setError('Failed to load farm details');
         }
+
+        // Fetch product batches
+        setBatchesLoading(true);
+        const batchesResponse = await getFarmProductBatches(farmId);
+        if (batchesResponse.success && Array.isArray(batchesResponse.data)) {
+          setBatches(batchesResponse.data);
+        } else {
+          console.warn('Failed to load product batches');
+        }
       } catch (err) {
         console.error('Error fetching farm details:', err);
         setError('Error loading farm details');
       } finally {
         setIsLoading(false);
+        setBatchesLoading(false);
       }
     };
 
@@ -84,6 +99,31 @@ export function FarmDetail() {
     } finally {
       setIsFavoriting(false);
     }
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(batches.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBatches = batches.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (isLoading) {
@@ -261,6 +301,117 @@ export function FarmDetail() {
           )}
         </Card>
       </div>
+
+      {/* Product Batches Section */}
+      <section className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Product Batches Available
+          {batches.length > 0 && (
+            <span className="text-lg font-normal text-gray-500 ml-2">
+              ({batches.length})
+            </span>
+          )}
+        </h2>
+
+        {batchesLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">Loading product batches...</p>
+          </div>
+        ) : batches.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              {paginatedBatches.map((batch) => (
+                <ProductBatchCard
+                  key={batch.id}
+                  batch={batch}
+                  onNavigate={() => navigate(`/product/${batch.id}`)}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(endIndex, batches.length)} of{' '}
+                  {batches.length} batches
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Previous Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="gap-1"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  {/* Page Numbers */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => {
+                      const pageNum = i + 1;
+                      // Show first, last, current, and 1 page before/after current
+                      const shouldShow =
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        pageNum === currentPage ||
+                        pageNum === currentPage - 1 ||
+                        pageNum === currentPage + 1;
+
+                      if (!shouldShow) {
+                        // Show ellipsis before last page if needed
+                        if (pageNum === currentPage + 2 && currentPage + 2 < totalPages) {
+                          return (
+                            <span key={`ellipsis-${pageNum}`} className="px-2">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handlePageClick(pageNum)}
+                          className="min-w-10"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Next Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="gap-1"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground">
+              No product batches available from this farm yet.
+            </p>
+          </Card>
+        )}
+      </section>
+
       <Footer />
     </div>
   );

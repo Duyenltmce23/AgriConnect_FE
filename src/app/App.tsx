@@ -49,6 +49,8 @@ import { ProductBatchList } from '../features/farmer/ProductBatchList/ProductBat
 import { ProductBatchDetail } from '../features/farmer/ProductBatchDetail/ProductBatchDetail';
 import FarmsPage from '../features/customer/FarmsPage/Index';
 import { AddressesPage } from '../features/customer/Addresses/Index';
+import { PreOrderPage } from '../features/customer/PreOrderPage/Index';
+import { PreOrderConfirmationPage } from '../features/customer/PreOrderConfirmationPage/Index';
 
 import '@n8n/chat/style.css';
 import { createChat } from '@n8n/chat';
@@ -298,6 +300,14 @@ export default function App() {
             <Route
               path="/checkout"
               element={<CheckoutPage onBack={() => navigate('/cart')} />}
+            />
+            <Route
+              path="/pre-order/:batchId"
+              element={<PreOrderPage />}
+            />
+            <Route
+              path="/pre-order-confirmation/:orderCode"
+              element={<PreOrderConfirmationPage />}
             />
             <Route path="/order-payment" element={<OrderPaymentPage />} />
             <Route

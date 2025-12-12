@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, X } from 'lucide-react';
+import { Search, Eye, X, Check } from 'lucide-react';
 import axios from 'axios';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
 import { formatVND } from '../../../components/ui/utils';
 import {
   Select,
@@ -21,6 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from '../../../components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../../../components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../../../api';
 
@@ -66,13 +72,24 @@ export function OrderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [preOrders, setPreOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [farmId, setFarmId] = useState<string | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [viewPreOrders, setViewPreOrders] = useState(false);
+  const [approvingOrderId, setApprovingOrderId] = useState<string | null>(null);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [selectedPreOrderId, setSelectedPreOrderId] = useState<string | null>(
+    null
+  );
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [fullname, setFullname] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [expectedReleaseDate, setExpectedReleaseDate] = useState('');
   const navigate = useNavigate();
 
   const statusOptions = [
@@ -109,7 +126,6 @@ export function OrderList() {
         }
 
         const currentFarmId = farmResponse.data.data.id;
-        setFarmId(currentFarmId);
         console.log('Farm ID:', currentFarmId);
 
         // Fetch orders for this farm
@@ -135,12 +151,29 @@ export function OrderList() {
             ordersResponse.data.message || 'Invalid response format'
           );
         }
+
+        // Fetch pre-orders for this farm
+        const preOrdersUrl = API.order.getPreOrdersByFarm(currentFarmId);
+        console.log('Fetching pre-orders from:', preOrdersUrl);
+
+        const preOrdersResponse = await ordersApi.get(preOrdersUrl);
+        console.log('Pre-orders response:', preOrdersResponse.data);
+
+        if (
+          preOrdersResponse.data.success &&
+          Array.isArray(preOrdersResponse.data.data)
+        ) {
+          setPreOrders(preOrdersResponse.data.data);
+        } else {
+          setPreOrders([]);
+        }
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'An error occurred';
         setError(errorMessage);
         console.error('Failed to fetch orders:', errorMessage);
         setOrders([]);
+        setPreOrders([]);
       } finally {
         setLoading(false);
       }
@@ -195,7 +228,83 @@ export function OrderList() {
     }
   }
 
-  const filteredOrders = orders.filter((order) => {
+  function handleOpenApproveModal(orderId: string) {
+    setSelectedPreOrderId(orderId);
+    setShowApproveModal(true);
+  }
+
+  function handleCloseApproveModal() {
+    setShowApproveModal(false);
+    setSelectedPreOrderId(null);
+    setBankName('');
+    setAccountNumber('');
+    setFullname('');
+    setDepositAmount('');
+    setExpectedReleaseDate('');
+  }
+
+  async function handleSubmitApprove() {
+    try {
+      if (!selectedPreOrderId) {
+        throw new Error('No pre-order selected');
+      }
+
+      if (
+        !bankName ||
+        !accountNumber ||
+        !fullname ||
+        !depositAmount ||
+        !expectedReleaseDate
+      ) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      setApprovingOrderId(selectedPreOrderId);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const approveApi = axios.create({
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const response = await approveApi.patch(
+        API.order.approvePreOrder(selectedPreOrderId),
+        {
+          bankName,
+          accountNumber,
+          fullname,
+          depositAmount: parseFloat(depositAmount),
+          expectedReleaseDate: new Date(expectedReleaseDate).toISOString(),
+        }
+      );
+
+      if (response.data.success) {
+        setPreOrders((prevPreOrders) =>
+          prevPreOrders.filter((order) => order.id !== selectedPreOrderId)
+        );
+        alert('Pre-order approved successfully');
+        handleCloseApproveModal();
+      } else {
+        throw new Error(response.data.message || 'Failed to approve pre-order');
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'An error occurred';
+      alert(`Error approving pre-order: ${errorMessage}`);
+      console.error('Failed to approve pre-order:', errorMessage);
+    } finally {
+      setApprovingOrderId(null);
+    }
+  }
+
+  const dataToFilter = viewPreOrders ? preOrders : orders;
+
+  const filteredOrders = dataToFilter.filter((order) => {
     // Search filter
     const matchesSearch =
       order.orderCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -219,28 +328,45 @@ export function OrderList() {
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
   const currentOrders = filteredOrders.slice(startIndex, endIndex);
 
-  const getStatusColor = (status: Order['orderStatus']) => {
-    switch (status) {
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'Shipping':
-        return 'bg-purple-100 text-purple-800';
-      case 'Delivered':
-        return 'bg-green-100 text-green-800';
-      case 'Canceled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-gray-900">Order Management</h2>
-        <p className="text-muted-foreground">View and manage customer orders</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-gray-900">Order Management</h2>
+          <p className="text-muted-foreground">
+            View and manage customer orders and pre-orders
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant={viewPreOrders ? 'default' : 'outline'}
+            onClick={() => {
+              setViewPreOrders(false);
+              setCurrentPage(1);
+              setSearchQuery('');
+              setFilterStatus('all');
+              setStartDate('');
+              setEndDate('');
+            }}
+            className={viewPreOrders ? '' : 'bg-blue-600 hover:bg-blue-700'}
+          >
+            Orders
+          </Button>
+          <Button
+            variant={viewPreOrders ? 'default' : 'outline'}
+            onClick={() => {
+              setViewPreOrders(true);
+              setCurrentPage(1);
+              setSearchQuery('');
+              setFilterStatus('all');
+              setStartDate('');
+              setEndDate('');
+            }}
+            className={viewPreOrders ? 'bg-green-600 hover:bg-green-700' : ''}
+          >
+            Pre-Orders
+          </Button>
+        </div>
       </div>
 
       <Card className="p-6">
@@ -387,10 +513,17 @@ export function OrderList() {
               <TableRow>
                 <TableHead>Order Code</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Total Price</TableHead>
-                <TableHead>Status</TableHead>
+                {viewPreOrders ? (
+                  <TableHead>Quantity</TableHead>
+                ) : (
+                  <>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Total Price</TableHead>
+                  </>
+                )}
+                {!viewPreOrders && <TableHead>Status</TableHead>}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -398,63 +531,98 @@ export function OrderList() {
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={viewPreOrders ? 6 : 8}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    Loading orders...
+                    Loading {viewPreOrders ? 'pre-orders' : 'orders'}...
                   </TableCell>
                 </TableRow>
               ) : currentOrders.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={viewPreOrders ? 6 : 8}
                     className="text-center py-8 text-muted-foreground"
                   >
-                    No orders found
+                    No {viewPreOrders ? 'pre-orders' : 'orders'} found
                   </TableCell>
                 </TableRow>
               ) : (
                 currentOrders.map((order) => (
                   <TableRow key={order.id}>
-                    <TableCell>{order.orderCode}</TableCell>
+                    <TableCell className="font-medium">
+                      {order.orderCode}
+                    </TableCell>
                     <TableCell>{order.customer.fullname}</TableCell>
+                    <TableCell>{order.customer.phone}</TableCell>
                     <TableCell>
                       {new Date(order.orderDate).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>{order.orderItems.length}</TableCell>
-                    <TableCell>
-                      {formatVND(order.totalPrice)}
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={order.orderStatus}
-                        onValueChange={(value) =>
-                          handleStatusChange(order.id, value)
-                        }
-                        disabled={updatingOrderId === order.id}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statusOptions.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                    {viewPreOrders ? (
+                      <TableCell className="text-center font-semibold">
+                        {order.orderItems.reduce(
+                          (sum, item) => sum + item.quantity,
+                          0
+                        )}
+                      </TableCell>
+                    ) : (
+                      <>
+                        <TableCell className="text-center">
+                          {order.orderItems.length}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {formatVND(order.totalPrice)}
+                        </TableCell>
+                      </>
+                    )}
+                    {!viewPreOrders && (
+                      <TableCell>
+                        <Select
+                          value={order.orderStatus}
+                          onValueChange={(value) =>
+                            handleStatusChange(order.id, value)
+                          }
+                          disabled={updatingOrderId === order.id}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewDetails(order.id)}
-                        disabled={updatingOrderId === order.id}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onViewDetails(order.id)}
+                          disabled={
+                            updatingOrderId === order.id ||
+                            approvingOrderId === order.id
+                          }
+                          title="View order details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {viewPreOrders && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleOpenApproveModal(order.id)}
+                            disabled={approvingOrderId === order.id}
+                            className="bg-green-600 hover:bg-green-700"
+                            title="Approve pre-order"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -498,6 +666,84 @@ export function OrderList() {
           </div>
         )}
       </Card>
+
+      {/* Approve Pre-Order Modal */}
+      <Dialog open={showApproveModal} onOpenChange={setShowApproveModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Approve Pre-Order</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Bank Name
+              </label>
+              <Input
+                placeholder="Enter bank name"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Account Number
+              </label>
+              <Input
+                placeholder="Enter account number"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Full Name
+              </label>
+              <Input
+                placeholder="Enter full name"
+                value={fullname}
+                onChange={(e) => setFullname(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Deposit Amount
+              </label>
+              <Input
+                type="number"
+                placeholder="Enter deposit amount"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Expected Release Date
+              </label>
+              <Input
+                type="date"
+                value={expectedReleaseDate}
+                onChange={(e) => setExpectedReleaseDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCloseApproveModal}
+              disabled={approvingOrderId !== null}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitApprove}
+              disabled={approvingOrderId !== null}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {approvingOrderId ? 'Approving...' : 'Approve'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

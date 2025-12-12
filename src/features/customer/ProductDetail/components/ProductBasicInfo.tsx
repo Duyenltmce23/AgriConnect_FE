@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Leaf, Shield, ShoppingCart, Star, Truck } from "lucide-react";
+import { Leaf, Shield, ShoppingCart, Star, Truck, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
 import { Card } from "../../../../components/ui/card";
@@ -33,7 +34,12 @@ export function ProductBasicInfo({
   toggleFavorite,
   isLoading,
 }: ProductBasicInfoProps) {
+  const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(false);
+
+  const handlePreOrder = () => {
+    navigate(`/pre-order/${product.id}`);
+  };
 
   const handleViewTraceability = async () => {
     setIsVerifying(true);
@@ -127,35 +133,45 @@ export function ProductBasicInfo({
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-           <div className="flex items-center border rounded-lg">
-             <Button
-               variant="ghost"
-               size="sm"
-               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-               className="px-4"
-             >
-               -
-             </Button>
-             <span className="px-6 py-2 border-x">{quantity}</span>
-             <Button
-               variant="ghost"
-               size="sm"
-               onClick={() => setQuantity(quantity + 1)}
-               className="px-4"
-             >
-               +
-             </Button>
-           </div>
-           <Button
-             className="flex-1 bg-green-600 hover:bg-green-700"
-             onClick={handleAddToCart}
-             disabled={!product.inStock || isLoading}
-           >
-             <ShoppingCart className="h-5 w-5 mr-2" />
-             {isLoading ? "Adding..." : "Add to Cart"}
-           </Button>
-         </div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center border rounded-lg">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="px-4"
+              >
+                -
+              </Button>
+              <span className="px-6 py-2 border-x">{quantity}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setQuantity(quantity + 1)}
+                className="px-4"
+              >
+                +
+              </Button>
+            </div>
+            <Button
+              className="flex-1 bg-green-600 hover:bg-green-700"
+              onClick={handleAddToCart}
+              disabled={!product.inStock || isLoading}
+            >
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              {isLoading ? "Adding..." : "Add to Cart"}
+            </Button>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+            onClick={handlePreOrder}
+          >
+            <Package className="h-5 w-5 mr-2" />
+            Pre-Order
+          </Button>
+        </div>
 
         <Button
           variant="outline"

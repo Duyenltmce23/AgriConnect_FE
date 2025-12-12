@@ -84,11 +84,16 @@ export const API = {
     me: `${BASE_URL}/orders/me`,
     get: (orderId: string) => `${BASE_URL}/orders/${orderId}`,
     create: `${BASE_URL}/orders`,
+    preOrder: `${BASE_URL}/orders/pre-order`,
     getByCode: (orderCode: string) =>
       `${BASE_URL}/orders/order-code/${orderCode}`,
     getByFarm: (farmId: string) => `${BASE_URL}/orders/farm/${farmId}`,
+    getPreOrdersByFarm: (farmId: string) =>
+      `${BASE_URL}/farm/${farmId}/pre-orders`,
     updateStatus: (orderId: string) =>
       `${BASE_URL}/orders/${orderId}/order-status`,
+    approvePreOrder: (orderId: string) =>
+      `${BASE_URL}/orders/pre-orders/${orderId}/approve`,
   },
   favoriteFarms: {
     me: `${BASE_URL}/favorite-farms/me`,

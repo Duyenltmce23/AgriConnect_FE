@@ -1,6 +1,8 @@
 import { Button } from '../../../../components/ui/button';
 import { Card } from '../../../../components/ui/card';
 import { Badge } from '../../../../components/ui/badge';
+import { Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { ProductBatch } from '../types';
 
 interface ProductBatchCardProps {
@@ -9,10 +11,15 @@ interface ProductBatchCardProps {
 }
 
 export function ProductBatchCard({ batch, onNavigate }: ProductBatchCardProps) {
+  const navigate = useNavigate();
   const isInStock = batch.availableQuantity > 0;
   const imageUrl =
     batch.imageUrls?.[0] ||
     'https://images.unsplash.com/photo-1565032156168-0a22e5b8374f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwxfHx8fDE3NTk5NTE4OTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral';
+
+  const handlePreOrder = () => {
+    navigate(`/pre-order/${batch.id}`);
+  };
 
   return (
     <Card className='overflow-hidden hover:shadow-lg transition-shadow'>
@@ -64,21 +71,38 @@ export function ProductBatchCard({ batch, onNavigate }: ProductBatchCardProps) {
           <p>
             <strong>Total Yield:</strong> {batch.totalYield} {batch.units}
           </p>
+          {batch.harvestDate && (
+            <p>
+              <strong>Harvest:</strong>{' '}
+              {new Date(batch.harvestDate).toLocaleDateString()}
+            </p>
+          )}
           <p>
-            <strong>Harvest:</strong>{' '}
-            {new Date(batch.harvestDate).toLocaleDateString()}
+            <strong>Planted:</strong>{' '}
+            {new Date(batch.plantingDate).toLocaleDateString()}
           </p>
         </div>
 
-        {/* View Button */}
-        <Button
-          onClick={onNavigate}
-          className='w-full bg-green-600 hover:bg-green-700'
-          disabled={!isInStock}
-        >
-          View Product
-        </Button>
+        {/* View Button and Pre-Order Button */}
+        <div className='space-y-2'>
+          <Button
+            onClick={onNavigate}
+            className='w-full bg-green-600 hover:bg-green-700'
+            disabled={!isInStock}
+          >
+            View Product
+          </Button>
+          <Button
+            onClick={handlePreOrder}
+            variant='outline'
+            className='w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200'
+          >
+            <Package className='h-4 w-4 mr-2' />
+            Pre-Order
+          </Button>
+        </div>
       </div>
     </Card>
   );
 }
+

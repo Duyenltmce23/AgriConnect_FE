@@ -86,7 +86,8 @@ export function CartPage({
   const handleUpdateQuantity = async (
     itemId: string,
     batchId: string,
-    newQuantity: number
+    newQuantity: number,
+    currentQuantity?: number
   ) => {
     if (newQuantity < 1) {
       await handleRemoveItem(itemId);
@@ -106,54 +107,27 @@ export function CartPage({
         return;
       }
 
-      const payload: UpdateCartItemRequest = { batchId, quantity: newQuantity };
+      // Get current quantity from cart data
+      const current = currentQuantity ?? 
+        cartData?.cartItems
+          .flatMap(farm => farm?.items || [])
+          .find(item => item.itemId === itemId)?.quantity ?? 0;
+
+      // Calculate delta (change amount)
+      const delta = newQuantity - current;
+
+      const payload: UpdateCartItemRequest = { batchId, quantity: delta };
       const response = await updateCartItemQuantity(cartId, payload);
 
       if (response.success) {
-        // Update UI immediately
-        setCartData((prevData) => {
-          if (!prevData) return prevData;
-
-          const newCartItems = prevData.cartItems.map((farm) => {
-            if (!farm) return farm;
-            return {
-              ...farm,
-              items:
-                farm.items?.map((item) => {
-                  if (item.itemId === itemId) {
-                    return {
-                      ...item,
-                      quantity: newQuantity,
-                      itemPrice: item.batchPrice * newQuantity,
-                    };
-                  }
-                  return {
-                    ...item,
-                    itemPrice: item.batchPrice * (item.quantity ?? 1),
-                  };
-                }) || [],
-            };
-          });
-
-          const newTotalPrice = newCartItems.reduce((sum, farm) => {
-            if (!farm || !farm.items) return sum;
-            return (
-              sum +
-              farm.items.reduce(
-                (s, it) => s + it.batchPrice * (it.quantity ?? 0),
-                0
-              )
-            );
-          }, 0);
-
-          return {
-            ...prevData,
-            cartItems: newCartItems,
-            totalPrice: newTotalPrice,
-          };
-        });
-
-        toast.success('Cart updated');
+        // Fetch fresh cart data to ensure accuracy
+        const fresh = await getCartItems();
+        if (fresh.success && fresh.data) {
+          setCartData(fresh.data);
+          toast.success('Cart updated');
+        } else {
+          toast.error('Failed to refresh cart data');
+        }
 
         // FIX: Clear temporary input after update
         clearQuantityInputs(itemId);
@@ -406,7 +380,8 @@ export function CartPage({
                                       handleUpdateQuantity(
                                         item.itemId,
                                         item.batchId,
-                                        item.quantity - 1
+                                        item.quantity - 1,
+                                        item.quantity
                                       )
                                     }
                                     disabled={
@@ -435,20 +410,21 @@ export function CartPage({
                                       }));
                                     }}
                                     onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        const newQty =
-                                          quantityInputs[item.itemId] ??
-                                          item.quantity;
-                                        if (newQty >= 1) {
-                                          handleUpdateQuantity(
-                                            item.itemId,
-                                            item.batchId,
-                                            newQty
-                                          );
-                                          clearQuantityInputs(item.itemId);
-                                        }
-                                      }
-                                    }}
+                                       if (e.key === 'Enter') {
+                                         const newQty =
+                                           quantityInputs[item.itemId] ??
+                                           item.quantity;
+                                         if (newQty >= 1) {
+                                           handleUpdateQuantity(
+                                             item.itemId,
+                                             item.batchId,
+                                             newQty,
+                                             item.quantity
+                                           );
+                                           clearQuantityInputs(item.itemId);
+                                         }
+                                       }
+                                     }}
                                     onBlur={() =>
                                       clearQuantityInputs(item.itemId)
                                     }
@@ -464,7 +440,8 @@ export function CartPage({
                                       handleUpdateQuantity(
                                         item.itemId,
                                         item.batchId,
-                                        item.quantity + 1
+                                        item.quantity + 1,
+                                        item.quantity
                                       )
                                     }
                                     disabled={updatingItems.has(item.itemId)}
